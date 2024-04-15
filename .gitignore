@@ -16,3 +16,15 @@ debug.py
 
 # Visual Studio Code
 .vscode
+
+# Virtual Environment
+venv/
+env/
+*.env
+
+# IDE/Editor
+.idea/
+.vscode/
+
+# ipynb
+lib-test.ipynb
