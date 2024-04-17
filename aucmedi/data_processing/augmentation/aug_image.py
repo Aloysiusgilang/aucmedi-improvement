@@ -105,6 +105,14 @@ class ImageAugmentation():
     # Augmentation: Elastic Transformation
     aug_elasticTransform = False
     aug_elasticTransform_p = 0.5
+    # Augmentation: Shifting
+    aug_shift = False
+    aug_shift_p = 0.5
+    aug_shift_limits = (-0.1, 0.1)
+    # Augmentation: Shearing
+    aug_shear = False
+    aug_shear_p = 0.5
+    aug_shear_limits = (-10, 10)
 
     #-----------------------------------------------------#
     #                    Initialization                   #
@@ -113,7 +121,7 @@ class ImageAugmentation():
                  saturation=True, hue=True, scale=True, crop=False,
                  grid_distortion=False, compression=False, gaussian_noise=False,
                  gaussian_blur=False, downscaling=False, gamma=False,
-                 elastic_transform=False):
+                 elastic_transform=False, shift=False, shear=False):
         """ Initialization function for the Image Augmentation interface.
 
         With boolean switches, it is possible to selected desired augmentation techniques.
@@ -136,6 +144,8 @@ class ImageAugmentation():
             downscaling (bool):             Boolean, whether downscaling should be added as data augmentation.
             gamma (bool):                   Boolean, whether gamma changes should be added as data augmentation.
             elastic_transform (bool):       Boolean, whether elastic deformation should be performed as data augmentation.
+            shift (bool):                   Boolean, whether shifting should be performed as data augmentation.
+            shear (bool):                   Boolean, whether shearing should be performed as data augmentation.
 
         !!! warning
             If class variables (attributes) are modified, the internal augmentation operator
@@ -168,6 +178,8 @@ class ImageAugmentation():
             aug_downscaling_p (float):      Probability of downscaling application if activated. Default=0.5.
             aug_gamma_p (float):            Probability of gamma application if activated. Default=0.5.
             aug_elasticTransform_p (float): Probability of elastic deformation application if activated. Default=0.5.
+            aug_shift_p (float):            Probability of shifting application if activated. Default=0.5.
+            aug_shear_p (float):            Probability of shearing application if activated. Default=0.5.
         """
         # Cache class variables
         self.aug_flip = flip
@@ -185,6 +197,8 @@ class ImageAugmentation():
         self.aug_gamma = gamma
         self.aug_gridDistortion = grid_distortion
         self.aug_elasticTransform = elastic_transform
+        self.aug_shift = shift
+        self.aug_shear = shear
         # Build augmentation operator
         self.build()
 
@@ -263,6 +277,15 @@ class ImageAugmentation():
         if self.aug_elasticTransform:
             tf = ai.ElasticTransform(p=self.aug_elasticTransform_p)
             transforms.append(tf)
+        if self.aug_shift:
+            tf = ai.ShiftScaleRotate(shift_limit=self.aug_shift_limits,
+                                     scale_limit=0,
+                                     rotate_limit=0,
+                                     p=self.aug_shift_p)
+            transforms.append(tf)
+        if self.aug_shear:
+            tf = ai.Affine(shear=self.aug_shear_limits,
+                           p=self.aug_shear_p)
 
         # Compose transforms
         self.operator = Compose(transforms)
