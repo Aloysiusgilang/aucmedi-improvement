@@ -69,7 +69,7 @@ from aucmedi.data_processing.subfunctions.color_constancy import ColorConstancy
 from aucmedi.data_processing.subfunctions.clip import Clip
 from aucmedi.data_processing.subfunctions.chromer import Chromer
 from aucmedi.data_processing.subfunctions.clahe import Clahe
-from aucmedi.data_processing.subfunctions.clahe_cv import ClaheCV
+# from aucmedi.data_processing.subfunctions.clahe_cv import ClaheCV
 from aucmedi.data_processing.subfunctions.blur import Blur
 from aucmedi.data_processing.subfunctions.gaussianBlur import GaussianBlur
 from aucmedi.data_processing.subfunctions.medianBlur import MedianBlur
