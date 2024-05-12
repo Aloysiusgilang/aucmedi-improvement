@@ -45,67 +45,66 @@ def compute_metrics(preds, labels, n_labels, threshold=None):
     Returns:
         metrics (pandas.DataFrame):     Dataframe containing all computed metrics (except ROC).
     """
-    def compute_metrics(preds, labels, n_labels, threshold=None):
-        df_list = []
-        for c in range(n_labels):
-            data_dict = {}
-            truth = labels[:, c]
-            if threshold is None:
-                pred_argmax = np.argmax(preds, axis=-1)
-                pred = (pred_argmax == c).astype(int)
-            else:
-                pred = np.where(preds[:, c] >= threshold, 1, 0)
-            pred_prob = preds[:, c]
+    df_list = []
+    for c in range(n_labels):
+        data_dict = {}
+        truth = labels[:, c]
+        if threshold is None:
+            pred_argmax = np.argmax(preds, axis=-1)
+            pred = (pred_argmax == c).astype(int)
+        else:
+            pred = np.where(preds[:, c] >= threshold, 1, 0)
+        pred_prob = preds[:, c]
 
-            # Compute the confusion matrix elements
-            tp, tn, fp, fn = compute_CM(truth, pred)
+        # Compute the confusion matrix elements
+        tp, tn, fp, fn = compute_CM(truth, pred)
 
-            # Metrics from confusion matrix
-            sensitivity = tp / (tp + fn)
-            specificity = tn / (tn + fp)
-            precision = tp / (tp + fp)
-            fpr = fp / (fp + tn)
-            fnr = fn / (fn + tp)
-            fdr = fp / (fp + tp)
-            accuracy = (tp + tn) / (tp + tn + fp + fn)
-            f1 = 2 * tp / (2 * tp + fp + fn)
+        # Metrics from confusion matrix
+        sensitivity = tp / (tp + fn)
+        specificity = tn / (tn + fp)
+        precision = tp / (tp + fp)
+        fpr = fp / (fp + tn)
+        fnr = fn / (fn + tp)
+        fdr = fp / (fp + tp)
+        accuracy = (tp + tn) / (tp + tn + fp + fn)
+        f1 = 2 * tp / (2 * tp + fp + fn)
 
-            # Additional Metrics
-            try:
-                auc = roc_auc_score(truth, pred_prob)
-            except ValueError:
-                auc = float('nan')
+        # Additional Metrics
+        try:
+            auc = roc_auc_score(truth, pred_prob)
+        except ValueError:
+            auc = float('nan')
 
-            brier_score = brier_score_loss(truth, pred_prob)
-            kappa = cohen_kappa_score(truth, pred)
-            balanced_acc = balanced_accuracy_score(truth, pred)
+        brier_score = brier_score_loss(truth, pred_prob)
+        kappa = cohen_kappa_score(truth, pred)
+        balanced_acc = balanced_accuracy_score(truth, pred)
 
-            # Likelihood Ratio Positive (LR+)
-            lr_plus = sensitivity / (1 - specificity) if specificity != 1 else float('inf')
+        # Likelihood Ratio Positive (LR+)
+        lr_plus = sensitivity / (1 - specificity) if specificity != 1 else float('inf')
 
-            # Constructing the DataFrame
-            data_dict = {
-                "Sensitivity": sensitivity,
-                "Specificity": specificity,
-                "Precision": precision,
-                "FPR": fpr,
-                "FNR": fnr,
-                "FDR": fdr,
-                "Accuracy": accuracy,
-                "F1": f1,
-                "AUC": auc,
-                "Brier Score": brier_score,
-                "Cohen Kappa": kappa,
-                "Balanced Accuracy": balanced_acc,
-                "LR+": lr_plus
-            }
+        # Constructing the DataFrame
+        data_dict = {
+            "Sensitivity": sensitivity,
+            "Specificity": specificity,
+            "Precision": precision,
+            "FPR": fpr,
+            "FNR": fnr,
+            "FDR": fdr,
+            "Accuracy": accuracy,
+            "F1": f1,
+            "AUC": auc,
+            "Brier Score": brier_score,
+            "Cohen Kappa": kappa,
+            "Balanced Accuracy": balanced_acc,
+            "LR+": lr_plus
+        }
 
-            df = pd.DataFrame(data_dict, index=[0])
-            df['Class'] = c
-            df_list.append(df)
+        df = pd.DataFrame(data_dict, index=[0])
+        df['Class'] = c
+        df_list.append(df)
 
-        df_final = pd.concat(df_list, ignore_index=True)
-        return df_final
+    df_final = pd.concat(df_list, ignore_index=True)
+    return df_final
 
 #-----------------------------------------------------#
 #            Computation: Confusion Matrix            #
