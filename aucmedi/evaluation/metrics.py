@@ -22,7 +22,7 @@
 # External Libraries
 import numpy as np
 import pandas as pd
-from sklearn.metrics import roc_curve, roc_auc_score
+from sklearn.metrics import roc_curve, roc_auc_score, brier_score_loss, cohen_kappa_score, balanced_accuracy_score
 
 #-----------------------------------------------------#
 #         Computation: Classification Metrics         #
@@ -45,58 +45,67 @@ def compute_metrics(preds, labels, n_labels, threshold=None):
     Returns:
         metrics (pandas.DataFrame):     Dataframe containing all computed metrics (except ROC).
     """
-    df_list = []
-    for c in range(0, n_labels):
-        # Initialize variables
-        data_dict = {}
+    def compute_metrics(preds, labels, n_labels, threshold=None):
+        df_list = []
+        for c in range(n_labels):
+            data_dict = {}
+            truth = labels[:, c]
+            if threshold is None:
+                pred_argmax = np.argmax(preds, axis=-1)
+                pred = (pred_argmax == c).astype(int)
+            else:
+                pred = np.where(preds[:, c] >= threshold, 1, 0)
+            pred_prob = preds[:, c]
 
-        # Identify truth and prediction for class c
-        truth = labels[:, c]
-        if threshold is None:
-            pred_argmax = np.argmax(preds, axis=-1)
-            pred = (pred_argmax == c).astype(np.int8)
-        else:
-            pred = np.where(preds[:, c] >= threshold, 1, 0)
-        # Obtain prediction confidence (probability)
-        pred_prob = preds[:, c]
+            # Compute the confusion matrix elements
+            tp, tn, fp, fn = compute_CM(truth, pred)
 
-        # Compute the confusion matrix
-        tp, tn, fp, fn = compute_CM(truth, pred)
-        data_dict["TP"] = tp
-        data_dict["TN"] = tn
-        data_dict["FP"] = fp
-        data_dict["FN"] = fn
+            # Metrics from confusion matrix
+            sensitivity = tp / (tp + fn)
+            specificity = tn / (tn + fp)
+            precision = tp / (tp + fp)
+            fpr = fp / (fp + tn)
+            fnr = fn / (fn + tp)
+            fdr = fp / (fp + tp)
+            accuracy = (tp + tn) / (tp + tn + fp + fn)
+            f1 = 2 * tp / (2 * tp + fp + fn)
 
-        # Compute several metrics based on confusion matrix
-        data_dict["Sensitivity"] = np.divide(tp, tp+fn)
-        data_dict["Specificity"] = np.divide(tn, tn+fp)
-        data_dict["Precision"] = np.divide(tp, tp+fp)
-        data_dict["FPR"] = np.divide(fp, fp+tn)
-        data_dict["FNR"] = np.divide(fn, fn+tp)
-        data_dict["FDR"] = np.divide(fp, fp+tp)
-        data_dict["Accuracy"] = np.divide(tp+tn, tp+tn+fp+fn)
-        data_dict["F1"] = np.divide(2*tp, 2*tp+fp+fn)
+            # Additional Metrics
+            try:
+                auc = roc_auc_score(truth, pred_prob)
+            except ValueError:
+                auc = float('nan')
 
-        # Compute area under the ROC curve
-        try:
-            data_dict["AUC"] = roc_auc_score(truth, pred_prob)
-        except:
-            print("ROC AUC score is not defined.")
+            brier_score = brier_score_loss(truth, pred_prob)
+            kappa = cohen_kappa_score(truth, pred)
+            balanced_acc = balanced_accuracy_score(truth, pred)
 
-        # Parse metrics to dataframe
-        df = pd.DataFrame.from_dict(data_dict, orient="index",
-                                    columns=["score"])
-        df = df.reset_index()
-        df.rename(columns={"index": "metric"}, inplace=True)
-        df["class"] = c
+            # Likelihood Ratio Positive (LR+)
+            lr_plus = sensitivity / (1 - specificity) if specificity != 1 else float('inf')
 
-        # Append dataframe to list
-        df_list.append(df)
+            # Constructing the DataFrame
+            data_dict = {
+                "Sensitivity": sensitivity,
+                "Specificity": specificity,
+                "Precision": precision,
+                "FPR": fpr,
+                "FNR": fnr,
+                "FDR": fdr,
+                "Accuracy": accuracy,
+                "F1": f1,
+                "AUC": auc,
+                "Brier Score": brier_score,
+                "Cohen Kappa": kappa,
+                "Balanced Accuracy": balanced_acc,
+                "LR+": lr_plus
+            }
 
-    # Combine dataframes
-    df_final = pd.concat(df_list, axis=0, ignore_index=True)
-    # Return final dataframe
-    return df_final
+            df = pd.DataFrame(data_dict, index=[0])
+            df['Class'] = c
+            df_list.append(df)
+
+        df_final = pd.concat(df_list, ignore_index=True)
+        return df_final
 
 #-----------------------------------------------------#
 #            Computation: Confusion Matrix            #
