@@ -84,7 +84,7 @@ class GAN_Architecture_Base(ABC):
         return None
 
     @abstractmethod
-    def create_model(self):
+    def build_gan(self):
         """ Create the deep learning or convolutional neural network model.
 
         This function will be called inside the AUCMEDI model class and have to return a functional
@@ -99,6 +99,6 @@ class GAN_Architecture_Base(ABC):
         """
         return None
     
-    @abstractmethod
-    def train(self):
-        return None
+    # @abstractmethod
+    # def train(self):
+    #     return None

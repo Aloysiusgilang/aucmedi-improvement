@@ -28,3 +28,7 @@ env/
 
 # ipynb
 lib-test.ipynb
+
+examples/
+
+.DS_Store

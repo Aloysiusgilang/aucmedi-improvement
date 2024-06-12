@@ -49,7 +49,7 @@ from aucmedi.neural_network.gan_architectures import GAN_Architecture_Base
 #-----------------------------------------------------#
 #                 Vanilla Architecture                #
 #-----------------------------------------------------#
-class DCGAN(GAN_Architecture_Base):
+class DCGAN2(GAN_Architecture_Base):
     #---------------------------------------------#
     #                   __init__                  #
     #---------------------------------------------#
@@ -101,22 +101,22 @@ class DCGAN(GAN_Architecture_Base):
         return Model(inputs=model_input, outputs=x)
     
     def build_gan(self):
-        optimizer = Adam(learning_rate=2e-4, beta_1=0.5)
-
+        # Building and compiling the discriminator
         self.discriminator = self.create_discriminator()
-        self.discriminator.compile(loss='binary_crossentropy', optimizer=optimizer, metrics=['accuracy'])
+        self.discriminator.compile(loss='binary_crossentropy', optimizer="adam", metrics=['accuracy'])
 
+        # Building the generator
         self.generator = self.create_generator()
 
-        noise = Input(shape=(self.encoding_dims,))
-        img = self.generator(noise)
-
+        # Ensuring the discriminator's parameters are fixed when training the generator
         self.discriminator.trainable = False
 
+        # Combined model
+        noise = Input(shape=(self.encoding_dims,))
+        img = self.generator(noise)
         valid = self.discriminator(img)
+        combined = Model(noise, valid)
+        combined.compile(loss='binary_crossentropy', optimizer="adam")
 
-        self.combined = Model(noise, valid)
-        self.combined.compile(loss='binary_crossentropy', optimizer=optimizer)
-
-        return self.generator, self.discriminator, self.combined
+        return self.generator, self.discriminator, combined
     

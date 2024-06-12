@@ -24,6 +24,8 @@ from tensorflow.keras.models import load_model
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.models import Model
 import numpy as np
+import cv2
+import os
 # Internal libraries/scripts
 from aucmedi.neural_network.gan_architectures import architecture_dict
 
@@ -33,7 +35,7 @@ from aucmedi.neural_network.gan_architectures import architecture_dict
 # Class which represents the Neural Network
 class GANNeuralNetwork:
     
-    def __init__(self, channels, input_shape=None, architecture='DCGAN', loss="categorical_crossentropy", encoding_dims=100, step_channels=64,metrics=["categorical_accuracy"], learning_rate=1e-4, batch_size=32):
+    def __init__(self, channels, input_shape=None, architecture='DCGAN', loss="categorical_crossentropy", encoding_dims=100, step_channels=64,metrics=["categorical_accuracy"], learning_rate=1e-4, batch_size=32, output_directory=None):
         
         # Cache parameters
         self.channels = channels
@@ -41,6 +43,7 @@ class GANNeuralNetwork:
         self.metrics = metrics
         self.learning_rate = learning_rate
         self.batch_size = batch_size
+        self.output_directory = output_directory
     
         
         # Assemble architecture parameters
@@ -58,43 +61,34 @@ class GANNeuralNetwork:
     def train(self, training_generator, epochs=20):
         # Train the GAN
 
-        for epoch in range(self.epochs):
+        for epoch in range(epochs):
             for i in range(len(training_generator)):
 
                 # retrieve batches of real imgs
                 real_imgs, labels = training_generator[i]
+                current_batch_size = len(real_imgs)
 
                 # generate noise for the generator
-                noise = np.random.normal(0, 1, (self.batch_size, self.encoding_dims))
+                noise = np.random.normal(0, 1, (current_batch_size, 100))
 
                 # generate fake imgs
                 gen_imgs = self.generator.predict(noise)
 
                 # train the discriminator on real imgs 
-                real_y = np.ones((self.batch_size, 1))
+                real_y = np.ones((current_batch_size, 1))
                 d_loss_real = self.discriminator.train_on_batch(real_imgs, real_y)
 
                 # train the discriminator on fake imgs
-                fake_y = np.zeros((self.batch_size, 1))
+                fake_y = np.zeros((current_batch_size, 1))
                 d_loss_fake = self.discriminator.train_on_batch(gen_imgs, fake_y)
 
                 d_loss = 0.5 * np.add(d_loss_real, d_loss_fake)
 
                 # train the generator
-                g_loss = self.combined.train_on_batch(noise, np.ones((self.batch_size, 1)))
+                g_loss = self.combined.train_on_batch(noise, np.ones((current_batch_size, 1)))
 
                 # print progress
                 print(f"Epoch {epoch}, Batch {i}, D_Loss: {d_loss[0]}, G_Loss: {g_loss}")
-
-                
-
-
-
-
-
-
-    def predict(self, x):
-        return self.generator.predict(x)
 
 
     #---------------------------------------------#
@@ -137,3 +131,18 @@ class GANNeuralNetwork:
         # Compile model
         self.model.compile(optimizer=Adam(learning_rate=self.learning_rate),
                            loss=self.loss, metrics=self.metrics)
+
+    def generate(self, num_images, image_class=None, image_format="jpg"):
+        noise = np.random.normal(0, 1, (num_images, 100))
+
+        generated = self.generator.predict(noise)
+        #save the genearted images to output directory
+        augmented_images = []
+        for i in range(num_images):
+            # TODO: handle stik image type
+            filename = f"{image_class}_{i}.{image_format}"
+            cv2.imwrite(os.path.join(self.output_directory, filename), generated[i] * 255)
+            augmented_images.append(filename)
+
+        return augmented_images
+    
