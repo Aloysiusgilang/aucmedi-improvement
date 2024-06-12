@@ -78,3 +78,4 @@ from aucmedi.data_processing.augmentation import ImageAugmentation, \
                                                  VolumeAugmentation, \
                                                  BatchgeneratorsAugmentation
 from aucmedi.neural_network.model import NeuralNetwork
+from aucmedi.gan.gan_model import GANNeuralNetwork

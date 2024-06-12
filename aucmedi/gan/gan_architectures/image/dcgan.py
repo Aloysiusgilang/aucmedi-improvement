@@ -1,62 +1,48 @@
-#==============================================================================#
-#  Author:       Dominik Müller                                                #
-#  Copyright:    2024 IT-Infrastructure for Translational Medical Research,    #
-#                University of Augsburg                                        #
-#                                                                              #
-#  This program is free software: you can redistribute it and/or modify        #
-#  it under the terms of the GNU General Public License as published by        #
-#  the Free Software Foundation, either version 3 of the License, or           #
-#  (at your option) any later version.                                         #
-#                                                                              #
-#  This program is distributed in the hope that it will be useful,             #
-#  but WITHOUT ANY WARRANTY; without even the implied warranty of              #
-#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the               #
-#  GNU General Public License for more details.                                #
-#                                                                              #
-#  You should have received a copy of the GNU General Public License           #
-#  along with this program.  If not, see <http://www.gnu.org/licenses/>.       #
-#==============================================================================#
-#-----------------------------------------------------#
-#                    Documentation                    #
-#-----------------------------------------------------#
-""" The classification variant of the Vanilla architecture.
 
-No intensive hardware requirements, which makes it ideal for debugging.
-
-| Architecture Variable    | Value                      |
-| ------------------------ | -------------------------- |
-| Key in architecture_dict | "2D.Vanilla"               |
-| Input_shape              | (224, 224)                 |
-| Standardization          | "z-score"                  |
-
-???+ abstract "Reference - Implementation"
-    [https://github.com/wanghsinwei/isic-2019/](https://github.com/wanghsinwei/isic-2019/) <br>
-"""
-#-----------------------------------------------------#
-#                   Library imports                   #
-#-----------------------------------------------------#
-# External libraries
 from tensorflow.keras import Input
 from tensorflow.keras.layers import Conv2D, MaxPooling2D, Dense, Reshape, Conv2DTranspose, BatchNormalization, LeakyReLU, Flatten
 from tensorflow.keras.models import Model
+from tensorflow.keras.optimizers.legacy import Adam
+
 import numpy as np
+
 # Internal libraries
-from aucmedi.neural_network.gan_architectures import GAN_Architecture_Base
+from aucmedi.gan.gan_architectures import GAN_Architecture_Base
 
 
 #-----------------------------------------------------#
-#                 Vanilla Architecture                #
+#                 DCGAN Architecture                #
 #-----------------------------------------------------#
 class DCGAN(GAN_Architecture_Base):
     #---------------------------------------------#
     #                   __init__                  #
     #---------------------------------------------#
-    def __init__(self, encoding_dims=100, channels=1, input_shape=(32,32), step_channels=64): 
-        self.input = input_shape + (channels,)
-        self.encoding_dims = encoding_dims
-        self.step_channels = step_channels
+    def __init__(self, encoding_dims=100, channels=1, input_shape=(32,32), step_channels=64, optimizer=Adam(0.0002, 0.5), metrics=['accuracy'], loss='binary_crossentropy'): 
+        super().__init__(encoding_dims, channels, optimizer, metrics, loss, input_shape, step_channels)
 
-    def create_generator(self):
+        # build and compile the discriminator
+        self.discriminator = self.build_discriminator()
+        self.discriminator.compile(loss=self.loss, optimizer=self.optimizer, metrics=self.metrics)
+
+        # build the generator
+        self.generator = self.build_generator()
+
+        # The generator takes noise as input and generates imgs
+        z = Input(shape=(self.encoding_dims,))
+        img = self.generator(z)
+
+        # For the combined model we will only train the generator
+        self.discriminator.trainable = False
+
+        # The discriminator takes generated images as input and determines validity
+        validity = self.discriminator(img)
+
+        # The combined model  (stacked generator and discriminator)
+        # Trains the generator to fool the discriminator
+        self.combined = Model(z, validity)
+        self.combined.compile(loss=self.loss, optimizer=self.optimizer, metrics=self.metrics)
+
+    def build_generator(self):
         num_repeats = self.input[0].bit_length() - 4
         d = self.step_channels * (2 ** num_repeats)
         print('num_repeats',num_repeats)
@@ -77,7 +63,7 @@ class DCGAN(GAN_Architecture_Base):
 
         return Model(inputs=model_input, outputs=model_output)
     
-    def create_discriminator(self):
+    def build_discriminator(self):
         num_repeats = self.input[0].bit_length() - 4
         d = self.step_channels
         print('num_repeats',num_repeats)
@@ -98,14 +84,33 @@ class DCGAN(GAN_Architecture_Base):
 
         return Model(inputs=model_input, outputs=x)
     
-    def create_model(self):
-        generator = self.create_generator()
-        discriminator = self.create_discriminator()
+    def train(self, training_generator, epochs):
+        for epoch in range(epochs):
+            for i in range(len(training_generator)):
 
-        print('Generator', generator.summary())
-        print('Discriminator', discriminator.summary())
+                # retrieve batches of real imgs
+                real_imgs, labels = training_generator[i]
+                current_batch_size = len(real_imgs)
 
-        return generator, discriminator
-    
+                # generate noise for the generator
+                noise = np.random.normal(0, 1, (current_batch_size, 100))
 
-        
+                # generate fake imgs
+                gen_imgs = self.generator.predict(noise)
+
+                # train the discriminator on real imgs 
+                real_y = np.ones((current_batch_size, 1))
+                d_loss_real = self.discriminator.train_on_batch(real_imgs, real_y)
+
+                # train the discriminator on fake imgs
+                fake_y = np.zeros((current_batch_size, 1))
+                d_loss_fake = self.discriminator.train_on_batch(gen_imgs, fake_y)
+
+                d_loss = 0.5 * np.add(d_loss_real, d_loss_fake)
+
+                # train the generator
+                g_loss = self.combined.train_on_batch(noise, np.ones((current_batch_size, 1)))
+
+                # print progress
+                print(f"Epoch {epoch}, Batch {i}, D_Loss: {d_loss[0]}, G_Loss: {g_loss}")
+

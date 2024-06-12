@@ -21,13 +21,12 @@
 #-----------------------------------------------------#
 # External libraries
 from tensorflow.keras.models import load_model
-from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.models import Model
 import numpy as np
 import cv2
 import os
 # Internal libraries/scripts
-from aucmedi.neural_network.gan_architectures import architecture_dict
+from aucmedi.gan.gan_architectures import architecture_dict
 
 #-----------------------------------------------------#
 #            Neural Network (model) class             #
@@ -35,19 +34,20 @@ from aucmedi.neural_network.gan_architectures import architecture_dict
 # Class which represents the Neural Network
 class GANNeuralNetwork:
     
-    def __init__(self, channels, input_shape=None, architecture='DCGAN', loss="categorical_crossentropy", encoding_dims=100, step_channels=64,metrics=["categorical_accuracy"], learning_rate=1e-4, batch_size=32, output_directory=None):
+    def __init__(self, channels, input_shape, loss, metrics, optimizer, batch_size, output_directory, architecture='DCGAN', encoding_dims=100, step_channels=64):
         
         # Cache parameters
         self.channels = channels
+        self.input_shape = input_shape
         self.loss = loss
         self.metrics = metrics
-        self.learning_rate = learning_rate
+        self.optimizer = optimizer
         self.batch_size = batch_size
         self.output_directory = output_directory
     
         
         # Assemble architecture parameters
-        arch_paras = {"channels":channels, "encoding_dims":encoding_dims, "step_channels":step_channels}
+        arch_paras = {"channels":channels, "encoding_dims":encoding_dims, "step_channels":step_channels, "optimizer": optimizer, "metrics":metrics, "loss":loss}
         if input_shape is not None : arch_paras["input_shape"] = input_shape
 
         if isinstance(architecture, str) and architecture in architecture_dict:
@@ -56,86 +56,13 @@ class GANNeuralNetwork:
         else:
             self.architecture = architecture
 
-        self.generator, self.discriminator, self.combined = self.architecture.build_gan()
-
     def train(self, training_generator, epochs=20):
-        # Train the GAN
-
-        for epoch in range(epochs):
-            for i in range(len(training_generator)):
-
-                # retrieve batches of real imgs
-                real_imgs, labels = training_generator[i]
-                current_batch_size = len(real_imgs)
-
-                # generate noise for the generator
-                noise = np.random.normal(0, 1, (current_batch_size, 100))
-
-                # generate fake imgs
-                gen_imgs = self.generator.predict(noise)
-
-                # train the discriminator on real imgs 
-                real_y = np.ones((current_batch_size, 1))
-                d_loss_real = self.discriminator.train_on_batch(real_imgs, real_y)
-
-                # train the discriminator on fake imgs
-                fake_y = np.zeros((current_batch_size, 1))
-                d_loss_fake = self.discriminator.train_on_batch(gen_imgs, fake_y)
-
-                d_loss = 0.5 * np.add(d_loss_real, d_loss_fake)
-
-                # train the generator
-                g_loss = self.combined.train_on_batch(noise, np.ones((current_batch_size, 1)))
-
-                # print progress
-                print(f"Epoch {epoch}, Batch {i}, D_Loss: {d_loss[0]}, G_Loss: {g_loss}")
-
-
-    #---------------------------------------------#
-    #               Model Management              #
-    #---------------------------------------------#
-    # Re-initialize model weights
-    def reset_weights(self):
-        """ Re-initialize weights of the neural network model.
-
-        Useful for training multiple models with the same NeuralNetwork object.
-        """
-        self.model.set_weights(self.initialization_weights)
-
-    # Dump model to file
-    def dump(self, file_path):
-        """ Store model to disk.
-
-        Recommended to utilize the file format ".hdf5".
-
-        Args:
-            file_path (str):    Path to store the model on disk.
-        """
-        self.model.save(file_path)
-
-    # Load model from file
-    def load(self, file_path, custom_objects={}):
-        """ Load neural network model and its weights from a file.
-
-        After loading, the model will be compiled.
-
-        If loading a model in ".hdf5" format, it is not necessary to define any custom_objects.
-
-        Args:
-            file_path (str):            Input path, from which the model will be loaded.
-            custom_objects (dict):      Dictionary of custom objects for compiling
-                                        (e.g. non-TensorFlow based loss functions or architectures).
-        """
-        # Create model input path
-        self.model = load_model(file_path, custom_objects, compile=False)
-        # Compile model
-        self.model.compile(optimizer=Adam(learning_rate=self.learning_rate),
-                           loss=self.loss, metrics=self.metrics)
+        self.architecture.train(training_generator, epochs)
 
     def generate(self, num_images, image_class=None, image_format="jpg"):
         noise = np.random.normal(0, 1, (num_images, 100))
 
-        generated = self.generator.predict(noise)
+        generated = self.architecture.generator.predict(noise)
         #save the genearted images to output directory
         augmented_images = []
         for i in range(num_images):

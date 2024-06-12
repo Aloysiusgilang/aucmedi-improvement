@@ -1,30 +1,10 @@
-#==============================================================================#
-#  Author:       Dominik Müller                                                #
-#  Copyright:    2024 IT-Infrastructure for Translational Medical Research,    #
-#                University of Augsburg                                        #
-#                                                                              #
-#  This program is free software: you can redistribute it and/or modify        #
-#  it under the terms of the GNU General Public License as published by        #
-#  the Free Software Foundation, either version 3 of the License, or           #
-#  (at your option) any later version.                                         #
-#                                                                              #
-#  This program is distributed in the hope that it will be useful,             #
-#  but WITHOUT ANY WARRANTY; without even the implied warranty of              #
-#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the               #
-#  GNU General Public License for more details.                                #
-#                                                                              #
-#  You should have received a copy of the GNU General Public License           #
-#  along with this program.  If not, see <http://www.gnu.org/licenses/>.       #
-#==============================================================================#
-# Abstract Base Class for Architectures
-from aucmedi.neural_network.gan_architectures.arch_base import GAN_Architecture_Base
+from aucmedi.gan.gan_architectures.arch_base import GAN_Architecture_Base
 
 #-----------------------------------------------------#
 #                    Architectures                    #
 #-----------------------------------------------------#
 # Vanilla Classifier
-from aucmedi.neural_network.gan_architectures.image.dcgan import DCGAN
-from aucmedi.neural_network.gan_architectures.image.dcgan_2 import DCGAN2
+from aucmedi.gan.gan_architectures.image.dcgan import DCGAN
 
 #-----------------------------------------------------#
 #       Access Functions to Architecture Classes      #
@@ -32,8 +12,7 @@ from aucmedi.neural_network.gan_architectures.image.dcgan_2 import DCGAN2
 
 # Architecture Dictionary
 architecture_dict = {
-    "DCGAN": DCGAN,
-    "DCGAN2": DCGAN2
+    "DCGAN": DCGAN
 
 }
 # List of implemented architectures
