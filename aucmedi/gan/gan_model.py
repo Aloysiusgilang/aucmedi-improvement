@@ -22,6 +22,7 @@ class GANNeuralNetwork:
         self.metrics = metrics
         self.optimizer = optimizer
         self.batch_size = batch_size
+        self.encoding_dims = encoding_dims
         
         arch_paras = {
             "channels":channels,
@@ -42,20 +43,8 @@ class GANNeuralNetwork:
     def train(self, training_generator, epochs=20):
         self.architecture.train(training_generator, epochs)
 
-    def generate(self, num_images, image_class=None, image_format="jpg"):
-        noise = np.random.normal(0, 1, (num_images, 100))
-
-        generated = self.architecture.generator.predict(noise)
-        #save the genearted images to output directory
-        augmented_images = []
-        for i in range(num_images):
-            # TODO: handle stik image type
-            filename = f"{image_class}_{i}.{image_format}"
-            # TODO: handle standardization mode
-            cv2.imwrite(os.path.join(self.output_directory, filename), generated[i] * 255)
-            augmented_images.append(filename)
-
-        return augmented_images
+    def generate(self, noise):
+        return self.architecture.generator.predict(noise)
     
     def save_model(self, model_path):
         self.architecture.generator.save(model_path)
