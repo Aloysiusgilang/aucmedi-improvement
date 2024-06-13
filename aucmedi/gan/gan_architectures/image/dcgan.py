@@ -19,28 +19,7 @@ class DCGAN(GAN_Architecture_Base):
     #---------------------------------------------#
     def __init__(self, encoding_dims=100, channels=1, input_shape=(32,32), step_channels=64, optimizer=Adam(0.0002, 0.5), metrics=['accuracy'], loss='binary_crossentropy'): 
         super().__init__(encoding_dims, channels, optimizer, metrics, loss, input_shape, step_channels)
-
-        # build and compile the discriminator
-        self.discriminator = self.build_discriminator()
-        self.discriminator.compile(loss=self.loss, optimizer=self.optimizer, metrics=self.metrics)
-
-        # build the generator
-        self.generator = self.build_generator()
-
-        # The generator takes noise as input and generates imgs
-        z = Input(shape=(self.encoding_dims,))
-        img = self.generator(z)
-
-        # For the combined model we will only train the generator
-        self.discriminator.trainable = False
-
-        # The discriminator takes generated images as input and determines validity
-        validity = self.discriminator(img)
-
-        # The combined model  (stacked generator and discriminator)
-        # Trains the generator to fool the discriminator
-        self.combined = Model(z, validity)
-        self.combined.compile(loss=self.loss, optimizer=self.optimizer, metrics=self.metrics)
+        self.build_and_compile()
 
     def build_generator(self):
         num_repeats = self.input[0].bit_length() - 4
@@ -83,6 +62,29 @@ class DCGAN(GAN_Architecture_Base):
         x = Dense(1, activation='sigmoid')(x)
 
         return Model(inputs=model_input, outputs=x)
+    
+    def build_and_compile(self):
+        # build and compile the discriminator
+        self.discriminator = self.build_discriminator()
+        self.discriminator.compile(loss=self.loss, optimizer=self.optimizer, metrics=self.metrics)
+
+        # build the generator
+        self.generator = self.build_generator()
+
+        # The generator takes noise as input and generates imgs
+        z = Input(shape=(self.encoding_dims,))
+        img = self.generator(z)
+
+        # For the combined model we will only train the generator
+        self.discriminator.trainable = False
+
+        # The discriminator takes generated images as input and determines validity
+        validity = self.discriminator(img)
+
+        # The combined model  (stacked generator and discriminator)
+        # Trains the generator to fool the discriminator
+        self.combined = Model(z, validity)
+        self.combined.compile(loss=self.loss, optimizer=self.optimizer, metrics=self.metrics)
     
     def train(self, training_generator, epochs):
         for epoch in range(epochs):

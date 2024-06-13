@@ -10,16 +10,23 @@ class GAN_Architecture_Base(ABC):
         self.optimizer = optimizer
         self.metrics = metrics
         self.loss = loss
+        self.discriminator = None
+        self.generator = None
+        self.combined = None
 
     @abstractmethod
     def build_generator(self):
-        return None
+        pass
     
     @abstractmethod
     def build_discriminator(self):
-        return None
+        pass
+
+    @abstractmethod
+    def build_and_compile(self):
+        pass
     
     @abstractmethod
     def train(self, training_generator, epochs):
-        return None
+        pass
 
