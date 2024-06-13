@@ -5,6 +5,7 @@ from aucmedi.gan.gan_architectures.arch_base import GAN_Architecture_Base
 #-----------------------------------------------------#
 # Vanilla Classifier
 from aucmedi.gan.gan_architectures.image.dcgan import DCGAN
+from aucmedi.gan.gan_architectures.image.wgan_gp import WGAN_GP
 
 #-----------------------------------------------------#
 #       Access Functions to Architecture Classes      #
@@ -12,7 +13,8 @@ from aucmedi.gan.gan_architectures.image.dcgan import DCGAN
 
 # Architecture Dictionary
 architecture_dict = {
-    "DCGAN": DCGAN
+    "DCGAN": DCGAN,
+    "WGAN_GP": WGAN_GP
 
 }
 # List of implemented architectures
