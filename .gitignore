@@ -29,6 +29,7 @@ env/
 # ipynb
 lib-test.ipynb
 
+chest_xray/
 examples/
 
 .DS_Store

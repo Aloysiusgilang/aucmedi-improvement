@@ -14,23 +14,14 @@ from aucmedi.gan.gan_architectures import architecture_dict
 class GANNeuralNetwork:
     """ Neural Network class providing functionality for handling all model  methods."""
     
-    def __init__(self, channels, input_shape, loss, metrics, optimizer, batch_size, architecture='DCGAN', encoding_dims=100, step_channels=64):
+    def __init__(self, input_shape, batch_size, architecture='DCGAN', encoding_dims=128):
         
-        self.channels = channels
         self.input_shape = input_shape
-        self.loss = loss
-        self.metrics = metrics
-        self.optimizer = optimizer
         self.batch_size = batch_size
         self.encoding_dims = encoding_dims
         
         arch_paras = {
-            "channels":channels,
             "encoding_dims":encoding_dims,
-            "step_channels":step_channels, 
-            "optimizer": optimizer, 
-            "metrics":metrics, 
-            "loss":loss
         }
 
         if input_shape is not None : arch_paras["input_shape"] = input_shape
@@ -41,7 +32,7 @@ class GANNeuralNetwork:
             self.architecture = architecture
 
     def train(self, training_generator, epochs=20):
-        self.architecture.train(training_generator, epochs)
+        self.architecture.fit(training_generator, epochs=epochs)
 
     def generate(self, noise):
         return self.architecture.generator.predict(noise)

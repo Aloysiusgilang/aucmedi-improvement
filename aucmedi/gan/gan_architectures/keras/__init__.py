@@ -2,8 +2,7 @@
 #                    Architectures                    #
 #-----------------------------------------------------#
 # Vanilla Classifier
-from aucmedi.gan.gan_architectures.image.dcgan import DCGAN
-from aucmedi.gan.gan_architectures.image.wgan_gp import WGAN_GP
+from aucmedi.gan.gan_architectures.keras.dcgan import DCGAN
 
 #-----------------------------------------------------#
 #       Access Functions to Architecture Classes      #
@@ -11,9 +10,7 @@ from aucmedi.gan.gan_architectures.image.wgan_gp import WGAN_GP
 
 # Architecture Dictionary
 architecture_dict = {
-    "DCGAN": DCGAN,
-    "WGAN_GP": WGAN_GP
-
+    "DCGAN": DCGAN
 }
 # List of implemented architectures
 architectures = list(architecture_dict.keys())
