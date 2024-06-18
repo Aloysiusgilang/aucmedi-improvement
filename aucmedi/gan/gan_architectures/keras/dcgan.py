@@ -7,7 +7,6 @@ class DCGAN(tf.keras.Model):
     def __init__(self, discriminator=None, generator=None, input_shape=(28, 28), channels=1, step_channels=64, encoding_dims=128, **kwargs):
         super(DCGAN, self).__init__()
         self.encoding_dims = encoding_dims
-        self.latent_dim = encoding_dims
         self.image_shape = input_shape + (channels,)
         self.step_channels = step_channels
 
@@ -34,74 +33,65 @@ class DCGAN(tf.keras.Model):
         return [self.d_loss_metric, self.g_loss_metric]
 
     def build_generator(self):
-        model = keras.Sequential(
-            [
-                keras.Input(shape=(self.latent_dim,)),
-                layers.Dense(4 * 4 * 256),
-                layers.Reshape((4, 4, 256)),
-                layers.Conv2DTranspose(256, kernel_size=4, strides=2, padding="same"),
-                layers.LeakyReLU(alpha=0.2),
-                layers.Conv2DTranspose(128, kernel_size=4, strides=2, padding="same"),
-                layers.LeakyReLU(alpha=0.2),
-                layers.Conv2DTranspose(64, kernel_size=4, strides=2, padding="same"),
-                layers.LeakyReLU(alpha=0.2),
-                layers.Conv2D(3, kernel_size=3, padding="same", activation="sigmoid"),
-            ],
-            name="generator",
-        )
-        model.summary()
-        return model
+        num_repeats = self.image_shape[0].bit_length() - 4
+        d = self.step_channels * (2 ** num_repeats)
 
+        # Initialize input layer
+        model_input = keras.Input(shape=self.encoding_dims)
+        x = layers.Dense(d * 4 * 4)(model_input)
+        x = layers.Reshape((4, 4, d))(x)
+
+        for i in range(num_repeats):
+            x = layers.Conv2DTranspose(d // 2, (4, 4), strides=(2, 2), padding='same')(x)
+            x = layers.BatchNormalization()(x)
+            x = layers.LeakyReLU(alpha=0.2)(x)
+            d = d // 2
+        
+        x = layers.Conv2DTranspose(self.image_shape[2], (4, 4), strides=(2, 2), padding='same', activation='tanh')(x)
+        model_output = x
+
+        return Model(inputs=model_input, outputs=model_output)
+    
     def build_discriminator(self):
-        model = keras.Sequential(
-            [
-                keras.Input(shape=(32, 32, 3)),
-                layers.Conv2D(64, kernel_size=4, strides=2, padding="same"),
-                layers.LeakyReLU(alpha=0.2),
-                layers.Conv2D(128, kernel_size=4, strides=2, padding="same"),
-                layers.LeakyReLU(alpha=0.2),
-                layers.Conv2D(256, kernel_size=4, strides=2, padding="same"),
-                layers.LeakyReLU(alpha=0.2),
-                layers.Flatten(),
-                layers.Dropout(0.2),
-                layers.Dense(1, activation="sigmoid"),
-            ],
-            name="discriminator",
-        )
-        model.summary()
-        return model
+        num_repeats = self.image_shape[0].bit_length() - 4
+        d = self.step_channels
+
+        # Initialize input layer
+        model_input = keras.Input(shape=self.image_shape)
+        x = layers.Conv2D(d, (4, 4), strides=(2, 2), padding='same')(model_input)
+        x = layers.LeakyReLU(alpha=0.2)(x)
+
+        for i in range(num_repeats):
+            x = layers.Conv2D(d * 2, (4, 4), strides=(2, 2), padding='same')(x)
+            x = layers.BatchNormalization()(x)
+            x = layers.LeakyReLU(alpha=0.2)(x)
+            d = d * 2
+
+        x = layers.Flatten()(x)
+        x = layers.Dense(1, activation='sigmoid')(x)
+
+        return Model(inputs=model_input, outputs=x)
 
     def train_step(self, data):
         real_images, _ = data
         batch_size = tf.shape(real_images)[0]
-        print(f"Batch size: {batch_size.numpy()}")
 
-        random_latent_vectors = tf.random.normal(shape=(batch_size, self.latent_dim))
-        print(f"Random latent vectors shape: {random_latent_vectors.shape}")
+        random_latent_vectors = tf.random.normal(shape=(batch_size, self.encoding_dims))
 
         generated_images = self.generator(random_latent_vectors)
-        print(f"Generated images shape: {generated_images.shape}")
 
         combined_images = tf.concat([generated_images, real_images], axis=0)
-        print(f"Combined images shape: {combined_images.shape}")
 
         labels = tf.concat([tf.ones((batch_size, 1)), tf.zeros((batch_size, 1))], axis=0)
-        print(f"Labels shape: {labels.shape}")
 
         labels += 0.05 * tf.random.uniform(tf.shape(labels))
-        print(f"Labels after noise addition: {labels.numpy()}")
 
         with tf.GradientTape() as tape:
             predictions = self.discriminator(combined_images)
-            print(f"Discriminator predictions: {predictions.numpy()}")
 
             d_loss = self.loss_fn(labels, predictions)
-            print(f"Discriminator loss: {d_loss.numpy()}")
 
         grads = tape.gradient(d_loss, self.discriminator.trainable_weights)
-
-        for grad, weight in zip(grads, self.discriminator.trainable_weights):
-            print(f"Weight shape: {weight.shape}, Gradient shape: {None if grad is None else grad.shape}")
 
         if any(g is None for g in grads):
             raise ValueError("Discriminator gradients are None. Check the model and loss function.")
@@ -109,20 +99,14 @@ class DCGAN(tf.keras.Model):
         self.d_optimizer.apply_gradients(zip(grads, self.discriminator.trainable_weights))
 
         misleading_labels = tf.zeros((batch_size, 1))
-        print(f"Misleading labels shape: {misleading_labels.shape}")
 
         with tf.GradientTape() as tape:
             generated_images = self.generator(random_latent_vectors)
             predictions = self.discriminator(generated_images)
-            print(f"Generator predictions: {predictions.numpy()}")
 
             g_loss = self.loss_fn(misleading_labels, predictions)
-            print(f"Generator loss: {g_loss.numpy()}")
 
         grads = tape.gradient(g_loss, self.generator.trainable_weights)
-
-        for grad, weight in zip(grads, self.generator.trainable_weights):
-            print(f"Weight shape: {weight.shape}, Gradient shape: {None if grad is None else grad.shape}")
 
         if any(g is None for g in grads):
             raise ValueError("Generator gradients are None. Check the model and loss function.")
@@ -131,6 +115,8 @@ class DCGAN(tf.keras.Model):
 
         self.d_loss_metric.update_state(d_loss)
         self.g_loss_metric.update_state(g_loss)
+
+        print(f"Discriminator loss: {d_loss}, Generator loss: {g_loss}")
         return {
             "d_loss": self.d_loss_metric.result(),
             "g_loss": self.g_loss_metric.result(),
@@ -144,8 +130,3 @@ class DCGAN(tf.keras.Model):
                 print(f"Step {step + 1}/{len(training_generator)} - Data sample shape: {data[0].shape}, Data label shape: {data[1].shape}")
                 self.train_step(data)
             print(f"Completed epoch {epoch + 1}")
-
-# Example usage
-# dcgan = DCGAN()
-# dcgan.compile()
-# dcgan.fit(training_data, epochs=50)
