@@ -49,6 +49,15 @@ from aucmedi.neural_network.architectures.volume.convnext_small import ConvNeXtS
 from aucmedi.neural_network.architectures.volume.convnext_base import ConvNeXtBase
 from aucmedi.neural_network.architectures.volume.convnext_large import ConvNeXtLarge
 
+from aucmedi.neural_network.architectures.volume.efficientnetb0 import EfficientNetB0
+from aucmedi.neural_network.architectures.volume.efficientnetb1 import EfficientNetB1
+from aucmedi.neural_network.architectures.volume.efficientnetb2 import EfficientNetB2
+from aucmedi.neural_network.architectures.volume.efficientnetb3 import EfficientNetB3
+from aucmedi.neural_network.architectures.volume.efficientnetb4 import EfficientNetB4
+from aucmedi.neural_network.architectures.volume.efficientnetb5 import EfficientNetB5
+from aucmedi.neural_network.architectures.volume.efficientnetb6 import EfficientNetB6
+from aucmedi.neural_network.architectures.volume.efficientnetb7 import EfficientNetB7
+
 #-----------------------------------------------------#
 #       Access Functions to Architecture Classes      #
 #-----------------------------------------------------#
@@ -73,6 +82,14 @@ architecture_dict = {
     "ConvNeXtSmall": ConvNeXtSmall,
     "ConvNeXtBase": ConvNeXtBase,
     "ConvNeXtLarge": ConvNeXtLarge,
+    "EfficientNetB0": EfficientNetB0,
+    "EfficientNetB1": EfficientNetB1,
+    "EfficientNetB2": EfficientNetB2,
+    "EfficientNetB3": EfficientNetB3,
+    "EfficientNetB4": EfficientNetB4,
+    "EfficientNetB5": EfficientNetB5,
+    "EfficientNetB6": EfficientNetB6,
+    "EfficientNetB7": EfficientNetB7,
 }
 """ Dictionary of implemented 3D Architectures Methods in AUCMEDI.
 
