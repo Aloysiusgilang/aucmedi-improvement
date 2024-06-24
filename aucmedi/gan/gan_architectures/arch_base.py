@@ -1,32 +1,39 @@
-from abc import ABC, abstractmethod
+import tensorflow as tf
+from tensorflow.keras.optimizers import Adam
 
-class GAN_Architecture_Base(ABC):
+class GAN_Architecture_Base(tf.keras.Model):
     
-    @abstractmethod
-    def __init__(self, encoding_dims, channels, optimizer, metrics, loss, input_shape, step_channels):
-        self.input = input_shape + (channels,)
+    def __init__(self, encoding_dims, channels, input_shape, step_channels):
+        super(GAN_Architecture_Base, self).__init__()
         self.encoding_dims = encoding_dims
+        self.image_shape = input_shape + (channels,)
         self.step_channels = step_channels
-        self.optimizer = optimizer
-        self.metrics = metrics
-        self.loss = loss
-        self.discriminator = None
-        self.generator = None
-        self.combined = None
+        self.discriminator = self.build_discriminator()
+        self.generator = self.build_generator()
 
-    @abstractmethod
+    def compile(self, d_optimizer=Adam(), g_optimizer=Adam(), 
+                d_loss_fn=tf.keras.losses.BinaryCrossentropy(), 
+                g_loss_fn=tf.keras.losses.BinaryCrossentropy(), 
+                d_loss_metric=tf.keras.metrics.Mean(name="d_loss"), 
+                g_loss_metric=tf.keras.metrics.Mean(name="g_loss")):
+        super(GAN_Architecture_Base, self).compile()
+        self.d_optimizer = d_optimizer
+        self.g_optimizer = g_optimizer
+        self.d_loss_fn = d_loss_fn
+        self.g_loss_fn = g_loss_fn
+        self.d_loss_metric = d_loss_metric   
+        self.g_loss_metric = g_loss_metric
+
+    @property
+    def metrics(self):
+        return [self.d_loss_metric, self.g_loss_metric]
+    
     def build_generator(self):
-        pass
+        raise NotImplementedError("Subclasses should implement this method")
     
-    @abstractmethod
     def build_discriminator(self):
-        pass
-
-    @abstractmethod
-    def build_and_compile(self):
-        pass
+        raise NotImplementedError("Subclasses should implement this method")
     
-    @abstractmethod
-    def train(self, training_generator, epochs):
-        pass
+    def train_step(self, data):
+        raise NotImplementedError("Subclasses should implement this method")
 
