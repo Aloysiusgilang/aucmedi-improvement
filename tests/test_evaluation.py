@@ -241,7 +241,8 @@ class EvaluationTEST(unittest.TestCase):
                                        plot_confusion_matrix=False,
                                        plot_roc_curve=False)
         self.assertTrue(isinstance(metrics, pd.DataFrame))
-        self.assertTrue(np.array_equal(metrics.shape, (52, 3)))
+
+        self.assertTrue(np.array_equal(metrics.shape, (56, 3)))
         self.assertTrue(np.array_equal(metrics.columns.values,
                                       ["metric", "score", "class"]))
 
@@ -394,8 +395,8 @@ class EvaluationTEST(unittest.TestCase):
                                  "plot.comparison.gain.png")
         self.assertTrue(os.path.exists(path_plot))
 
-        self.assertTrue(np.array_equal(df_merged.shape, (156, 4)))
-        self.assertTrue(np.array_equal(df_gain.shape, (108, 4)))
+        self.assertTrue(np.array_equal(df_merged.shape, (168, 4)))
+        self.assertTrue(np.array_equal(df_gain.shape, (120, 4)))
 
     def test_evaluate_comparison_naming(self):
         pred_list = [self.preds,
@@ -435,8 +436,8 @@ class EvaluationTEST(unittest.TestCase):
                                  "plot.comparison.gain.png")
         self.assertTrue(os.path.exists(path_plot))
 
-        self.assertTrue(np.array_equal(df_merged.shape, (39, 3)))
-        self.assertTrue(np.array_equal(df_gain.shape, (27, 3)))
+        self.assertTrue(np.array_equal(df_merged.shape, (42, 3)))
+        self.assertTrue(np.array_equal(df_gain.shape, (30, 3)))
 
     #-------------------------------------------------#
     #          Evaluation - Dataset Analysis          #
