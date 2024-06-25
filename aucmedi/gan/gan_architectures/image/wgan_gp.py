@@ -97,7 +97,7 @@ class WGAN_GP(GAN_Architecture_Base):
                 real_logits = self.discriminator(real_images, training=True)
 
                 #calculate the discriminator loss
-                d_cost = self.d_loss_fn(real_img=real_logits, fake_img=fake_logits)
+                d_cost = self.d_loss_fn(real_logits, fake_logits)
 
                 #calculate the gradient penalty
                 gp = self.gradient_penalty(real_images, fake_images)

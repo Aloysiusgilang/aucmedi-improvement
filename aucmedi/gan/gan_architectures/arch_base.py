@@ -1,6 +1,6 @@
 import tensorflow as tf
 from tensorflow.keras.optimizers import Adam
-from aucmedi.gan.gan_architectures import architecture_dict
+
 class GAN_Architecture_Base(tf.keras.Model):
     
     def __init__(self, encoding_dims, channels, input_shape, step_channels):

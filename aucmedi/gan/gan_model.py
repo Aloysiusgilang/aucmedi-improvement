@@ -10,7 +10,7 @@ import csv
 import pandas as pd
 import json
 # Internal libraries/scripts
-from aucmedi.gan.gan_architectures import architecture_dict
+from aucmedi.gan.gan_architectures.gan_factory import GANFactory
 
 #-----------------------------------------------------#
 #           GAN Augmentation (model) class            #
@@ -22,29 +22,25 @@ class GANNeuralNetwork:
                   encoding_dims=128, step_channels=64, d_optimizer=Adam(), g_optimizer=Adam(), d_loss_fn=tf.keras.losses.BinaryCrossentropy(), 
                   g_loss_fn=tf.keras.losses.BinaryCrossentropy(), 
                   d_loss_metric=tf.keras.metrics.Mean(name="d_loss"), 
-                  g_loss_metric=tf.keras.metrics.Mean(name="g_loss")):
+                  g_loss_metric=tf.keras.metrics.Mean(name="g_loss"), **kwargs):
         
         self.input_shape = input_shape
         self.channels = channels
         self.encoding_dims = encoding_dims
-        
         arch_paras = {
-            "encoding_dims":encoding_dims,
-            "channels":channels,
-            "step_channels":step_channels
+            "encoding_dims": encoding_dims,
+            "channels": channels,
+            "step_channels": step_channels,
+            "input_shape": input_shape
         }
 
-        if input_shape is not None : arch_paras["input_shape"] = input_shape
-
-        if isinstance(architecture, str) and architecture in architecture_dict:
-            self.architecture = architecture_dict[architecture](**arch_paras)
-        else:
-            self.architecture = architecture
+        self.gan_factory = GANFactory()
+        self.architecture = self.gan_factory.create_model(architecture, **arch_paras, **kwargs)
 
         self.architecture.compile(d_optimizer=d_optimizer, g_optimizer=g_optimizer, d_loss_fn=d_loss_fn, g_loss_fn=g_loss_fn, d_loss_metric=d_loss_metric, g_loss_metric=g_loss_metric)
 
     def train(self, training_generator, epochs=20):
-        self.architecture.fit(training_generator, epochs=epochs)
+        self.architecture.fit(training_generator, epochs=epochs, verbose=1)
 
     def generate_images(self, num_images, image_class, save_path, image_format="jpg"):
         noise = np.random.normal(0, 1, (num_images, self.gan_model.encoding_dims))

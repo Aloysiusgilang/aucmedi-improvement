@@ -85,7 +85,7 @@ class DCGAN(GAN_Architecture_Base):
             generated_images = self.generator(random_latent_vectors)
             predictions = self.discriminator(generated_images)
 
-            g_loss = self.g_loss_fn(misleading_labels, predictions)
+            g_loss = self.d_loss_fn(misleading_labels, predictions)
 
         grads = tape.gradient(g_loss, self.generator.trainable_weights)
 

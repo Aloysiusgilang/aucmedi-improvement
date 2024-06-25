@@ -14,5 +14,3 @@ architecture_dict = {
     "DCGAN": DCGAN,
     "WGAN_GP": WGAN_GP,
 }
-# List of implemented architectures
-architectures = list(architecture_dict.keys())
