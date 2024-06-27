@@ -45,7 +45,7 @@ class Clahe(Subfunction_Base):
     #---------------------------------------------#
     #                Initialization               #
     #---------------------------------------------#
-    def __init__(self, clip_limit=4.0, tile_grid_size=(8, 8), interpolation=1):
+    def __init__(self, clip_limit=4.0, tile_grid_size=(8, 8)):
         """ Initialization function for creating a CLAHE Subfunction which can be passed to a
             [DataGenerator][aucmedi.data_processing.data_generator.DataGenerator].
 
@@ -62,12 +62,36 @@ class Clahe(Subfunction_Base):
     #                Transformation               #
     #---------------------------------------------#
     def transform(self, image):
-        # Convert float64 image to uint8
-        image_uint8 = (image * 255).astype(np.uint8)
+        # Determine the dimensions of the image
+        if image.ndim == 3 and image.shape[-1] == 1:
+            # 2D grayscale image
+            image_uint8 = (image).astype(np.uint8)
+            augmented = self.aug_transform.apply(img=image_uint8)
+            transformed_image = augmented.astype(np.float64)
         
-        # Apply CLAHE augmentation
-        augmented = self.aug_transform(image=image_uint8)
+        elif image.ndim == 3 and image.shape[-1] == 3:
+            # 2D RGB image
+            image_uint8 = (image).astype(np.uint8)
+            augmented = self.aug_transform.apply(img=image_uint8)
+            transformed_image = augmented.astype(np.float64)
+
+        elif image.ndim == 4 and image.shape[-1] == 3:
+            # 3D RGB image (batch of 2D RGB images)
+            image_uint8 = (image).astype(np.uint8)
+            transformed_image = np.zeros_like(image, dtype=np.float64)
+            for i in range(image.shape[0]):
+                augmented = self.aug_transform.apply(img=image_uint8[i])
+                transformed_image[i] = augmented.astype(np.float64)
+
+        elif image.ndim == 4 and image.shape[-1] == 1:
+            # 3D grayscale image (batch of 2D grayscale images)
+            image_uint8 = (image).astype(np.uint8)
+            transformed_image = np.zeros_like(image, dtype=np.float64)
+            for i in range(image.shape[0]):
+                augmented = self.aug_transform.apply(img=image_uint8[i])
+                transformed_image[i] = augmented.astype(np.float64)
         
-        # Convert image back to float64
-        transformed_image = augmented['image'].astype(np.float64) / 255.0
+        else:
+            raise ValueError("Unsupported image dimensions")
+        
         return transformed_image

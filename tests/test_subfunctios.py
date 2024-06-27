@@ -295,3 +295,106 @@ class SubfunctionsTEST(unittest.TestCase):
         self.assertTrue(np.array_equal(img_filtered.shape, (16, 24, 32, 3)))
         self.assertRaises(ValueError, sf.transform, self.img3Dhu.copy())
         self.assertRaises(ValueError, sf.transform, self.img2Drgb.copy())
+
+    def test_MEDIANFILTER_create(self):
+        sf = MedianBlur()
+
+    def test_MEDIANFILTER_transform(self):
+        sf = MedianBlur(blur_limit=7)
+        # Test 2D grayscale image
+        img_filtered = sf.transform(self.img2Dgray.copy())
+        self.assertFalse(np.array_equal(img_filtered, self.img2Dgray))
+        self.assertTrue(np.array_equal(img_filtered.shape, (16, 24, 1)))
+        
+        # Test 2D RGB image
+        img_filtered = sf.transform(self.img2Drgb.copy())
+        self.assertFalse(np.array_equal(img_filtered, self.img2Drgb))
+        self.assertTrue(np.array_equal(img_filtered.shape, (16, 24, 3)))
+
+        # test 3D grayscale image
+        img_filtered = sf.transform(self.img3Dgray.copy())
+        self.assertFalse(np.array_equal(img_filtered, self.img3Dgray))
+        self.assertTrue(np.array_equal(img_filtered.shape, (16, 24, 32, 1)))
+
+        # test 3D RGB image
+        img_filtered = sf.transform(self.img3Drgb.copy())
+        self.assertFalse(np.array_equal(img_filtered, self.img3Drgb))
+        self.assertTrue(np.array_equal(img_filtered.shape, (16, 24, 32, 3)))
+
+        
+ 
+    def test_GAUSSIANFILTER_create(self):
+        sf = GaussianBlur()
+
+    def test_GAUSSIANFILTER_transform(self):
+        sf = GaussianBlur()
+        # Test 2D grayscale image
+        img_filtered = sf.transform(self.img2Dgray.copy())
+        self.assertFalse(np.array_equal(img_filtered, self.img2Dgray))
+        self.assertTrue(np.array_equal(img_filtered.shape, (16, 24, 1)))
+        
+        # Test 2D RGB image
+        img_filtered = sf.transform(self.img2Drgb.copy())
+        self.assertFalse(np.array_equal(img_filtered, self.img2Drgb))
+        self.assertTrue(np.array_equal(img_filtered.shape, (16, 24, 3)))
+
+        # test 3D grayscale image
+        img_filtered = sf.transform(self.img3Dgray.copy())
+        self.assertFalse(np.array_equal(img_filtered, self.img3Dgray))
+        self.assertTrue(np.array_equal(img_filtered.shape, (16, 24, 32, 1)))
+
+        # test 3D RGB image
+        img_filtered = sf.transform(self.img3Drgb.copy())
+        self.assertFalse(np.array_equal(img_filtered, self.img3Drgb))
+        self.assertTrue(np.array_equal(img_filtered.shape, (16, 24, 32, 3)))
+
+
+    def test_BOXFILTER_create(self):
+        sf = Blur()
+
+    def test_BOXFILTER_transform(self):
+        sf = Blur()
+        # Test 2D grayscale image
+        img_filtered = sf.transform(self.img2Dgray.copy())
+        self.assertFalse(np.array_equal(img_filtered, self.img2Dgray))
+        self.assertTrue(np.array_equal(img_filtered.shape, (16, 24, 1)))
+        
+        # Test 2D RGB image
+        img_filtered = sf.transform(self.img2Drgb.copy())
+        self.assertFalse(np.array_equal(img_filtered, self.img2Drgb))
+        self.assertTrue(np.array_equal(img_filtered.shape, (16, 24, 3)))
+
+        # test 3D grayscale image
+        img_filtered = sf.transform(self.img3Dgray.copy())
+        self.assertFalse(np.array_equal(img_filtered, self.img3Dgray))
+        self.assertTrue(np.array_equal(img_filtered.shape, (16, 24, 32, 1)))
+
+        # test 3D RGB image
+        img_filtered = sf.transform(self.img3Drgb.copy())
+        self.assertFalse(np.array_equal(img_filtered, self.img3Drgb))
+        self.assertTrue(np.array_equal(img_filtered.shape, (16, 24, 32, 3)))
+
+    def test_CLAHE_create(self):
+        sf = Clahe()
+
+    def test_CLAHE_transform(self):
+        sf = Clahe()
+         # Test 2D grayscale image
+        img_filtered = sf.transform(self.img2Dgray.copy())
+        self.assertFalse(np.array_equal(img_filtered, self.img2Dgray))
+        self.assertTrue(np.array_equal(img_filtered.shape, (16, 24, 1)))
+        
+        # Test 2D RGB image
+        img_filtered = sf.transform(self.img2Drgb.copy())
+        self.assertFalse(np.array_equal(img_filtered, self.img2Drgb))
+        self.assertTrue(np.array_equal(img_filtered.shape, (16, 24, 3)))
+
+        # test 3D grayscale image
+        img_filtered = sf.transform(self.img3Dgray.copy())
+        self.assertFalse(np.array_equal(img_filtered, self.img3Dgray))
+        self.assertTrue(np.array_equal(img_filtered.shape, (16, 24, 32, 1)))
+
+        # test 3D RGB image
+        img_filtered = sf.transform(self.img3Drgb.copy())
+        self.assertFalse(np.array_equal(img_filtered, self.img3Drgb))
+        self.assertTrue(np.array_equal(img_filtered.shape, (16, 24, 32, 3)))
