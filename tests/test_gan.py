@@ -94,7 +94,7 @@ class GANNeuralNetworkTEST(unittest.TestCase):
         
         # create 10 random noise vectors with shape (10, encoding_dims)
         noise = np.random.normal(0, 1, (10, 100))
-        preds = model.architecture.generator.predict(noise)
+        preds = model.architecture.generate(noise)
 
         # check if the output shape is correct (num_images, x_size, y_size, channels)
         self.assertTrue(preds.shape == (10, 32, 32, 3))
@@ -107,7 +107,7 @@ class GANNeuralNetworkTEST(unittest.TestCase):
         
         # create 10 random noise vectors with shape (10, encoding_dims)
         noise = np.random.normal(0, 1, (10, 100))
-        preds = model.architecture.generator.predict(noise)
+        preds = model.architecture.generate(noise)
 
         # check if the output shape is correct (num_images, x_size, y_size, channels)
         self.assertTrue(preds.shape == (10, 32, 32, 3))

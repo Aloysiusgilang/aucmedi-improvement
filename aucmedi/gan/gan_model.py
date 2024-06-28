@@ -40,8 +40,8 @@ class GANNeuralNetwork:
         return history.history        
 
     def generate_images(self, num_images, image_class, save_path, image_format="jpg"):
-        noise = np.random.normal(0, 1, (num_images, self.gan_model.encoding_dims))
-        generated = self.gan_model.generate(noise)
+        noise = np.random.normal(0, 1, (num_images, self.architecture.encoding_dims))
+        generated = self.architecture.generate(noise)
 
         augmented_images = []
         for i in range(num_images):
@@ -100,10 +100,8 @@ class GANNeuralNetwork:
     def save_model(self, model_path):
         self.architecture.generator.save(model_path)
         self.architecture.disciminator.save(model_path)
-        self.architecture.combined.save(model_path)
 
     def load_model(self, model_path="output/model.keras"):
         self.architecture.generator = load_model(model_path)
         self.architecture.disciminator = load_model(model_path)
-        self.architecture.combined = load_model(model_path)
     

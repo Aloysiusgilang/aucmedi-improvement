@@ -32,4 +32,7 @@ class GAN_Architecture_Base(tf.keras.Model):
     
     def train_step(self, data):
         raise NotImplementedError("Subclasses should implement this method")
+    
+    def generate(self, noise):
+        return self.generator.predict(noise)
 
