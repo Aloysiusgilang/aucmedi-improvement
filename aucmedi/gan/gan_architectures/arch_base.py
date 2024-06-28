@@ -11,11 +11,7 @@ class GAN_Architecture_Base(tf.keras.Model):
         self.discriminator = self.build_discriminator()
         self.generator = self.build_generator()
 
-    def compile(self, d_optimizer=Adam(), g_optimizer=Adam(), 
-                d_loss_fn=tf.keras.losses.BinaryCrossentropy(), 
-                g_loss_fn=tf.keras.losses.BinaryCrossentropy(), 
-                d_loss_metric=tf.keras.metrics.Mean(name="d_loss"), 
-                g_loss_metric=tf.keras.metrics.Mean(name="g_loss")):
+    def compile(self, d_loss_fn, g_loss_fn, d_optimizer, g_optimizer, d_loss_metric, g_loss_metric):
         super(GAN_Architecture_Base, self).compile()
         self.d_optimizer = d_optimizer
         self.g_optimizer = g_optimizer

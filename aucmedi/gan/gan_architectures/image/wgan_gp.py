@@ -16,6 +16,23 @@ class WGAN_GP(GAN_Architecture_Base):
         self.gp_weight = gp_weight
         self.d_steps = discriminator_extra_steps
 
+    def discriminator_loss(real_img, fake_img):
+        real_loss = tf.reduce_mean(real_img)
+        fake_loss = tf.reduce_mean(fake_img)
+        return fake_loss - real_loss
+
+    # Define the loss functions for the generator.
+    def generator_loss(fake_img):
+        return -tf.reduce_mean(fake_img)
+
+
+    def compile(self, d_optimizer=Adam(learning_rate=0.0002, beta_1=0.5, beta_2=0.9),
+                g_optimizer=Adam(learning_rate=0.0002, beta_1=0.5, beta_2=0.9),
+                d_loss_fn=discriminator_loss, g_loss_fn=generator_loss,
+                d_loss_metric=tf.metrics.Mean(name='d_loss'), g_loss_metric=tf.metrics.Mean(name='g_loss')):
+        super(WGAN_GP, self).compile(d_loss_fn, g_loss_fn, d_optimizer, g_optimizer, d_loss_metric, g_loss_metric)
+    
+
     def build_generator(self):
         num_repeats = self.image_shape[0].bit_length() - 4
         d = self.step_channels * (2 ** num_repeats)

@@ -13,6 +13,12 @@ class DCGAN(GAN_Architecture_Base):
             step_channels=step_channels
         )
 
+    def compile(self, d_optimizer=Adam(learning_rate=0.0002, beta_1=0.5, beta_2=0.9),
+                g_optimizer=Adam(learning_rate=0.0002, beta_1=0.5, beta_2=0.9),
+                d_loss_fn=keras.losses.BinaryCrossentropy(), g_loss_fn=keras.losses.BinaryCrossentropy(),
+                d_loss_metric=keras.metrics.Mean(name='d_loss'), g_loss_metric=keras.metrics.Mean(name='g_loss')):
+        super(DCGAN, self).compile(d_loss_fn, g_loss_fn, d_optimizer, g_optimizer, d_loss_metric, g_loss_metric)
+
     def build_generator(self):
         num_repeats = self.image_shape[0].bit_length() - 4
         d = self.step_channels * (2 ** num_repeats)

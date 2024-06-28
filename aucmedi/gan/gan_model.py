@@ -2,7 +2,7 @@
 import tensorflow as tf
 from tensorflow.keras.models import load_model
 from tensorflow.keras.models import Model
-from tensorflow.keras.optimizers import Adam
+from tensorflow.keras.optimizers.legacy import Adam
 import numpy as np
 import cv2
 import os
@@ -18,12 +18,9 @@ from aucmedi.gan.gan_architectures.gan_factory import GANFactory
 # Class which represents the GAN Augmentation
 class GANNeuralNetwork:
     
-    def __init__(self, channels, input_shape=None, architecture='DCGAN',
-                  encoding_dims=128, step_channels=64, d_optimizer=Adam(), g_optimizer=Adam(), d_loss_fn=tf.keras.losses.BinaryCrossentropy(), 
-                  g_loss_fn=tf.keras.losses.BinaryCrossentropy(), 
-                  d_loss_metric=tf.keras.metrics.Mean(name="d_loss"), 
-                  g_loss_metric=tf.keras.metrics.Mean(name="g_loss"), **kwargs):
-        
+    def __init__(self, channels, input_shape=None, architecture='2D.DCGAN',
+                  encoding_dims=128, step_channels=64, **kwargs):
+
         self.input_shape = input_shape
         self.channels = channels
         self.encoding_dims = encoding_dims
@@ -36,11 +33,11 @@ class GANNeuralNetwork:
 
         self.gan_factory = GANFactory()
         self.architecture = self.gan_factory.create_model(architecture, **arch_paras, **kwargs)
-
-        self.architecture.compile(d_optimizer=d_optimizer, g_optimizer=g_optimizer, d_loss_fn=d_loss_fn, g_loss_fn=g_loss_fn, d_loss_metric=d_loss_metric, g_loss_metric=g_loss_metric)
+        self.architecture.compile()
 
     def train(self, training_generator, epochs=20):
-        self.architecture.fit(training_generator, epochs=epochs, verbose=1)
+        history = self.architecture.fit(training_generator, epochs=epochs, verbose=1)
+        return history.history        
 
     def generate_images(self, num_images, image_class, save_path, image_format="jpg"):
         noise = np.random.normal(0, 1, (num_images, self.gan_model.encoding_dims))
