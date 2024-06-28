@@ -35,8 +35,8 @@ class GANNeuralNetwork:
         self.architecture = self.gan_factory.create_model(architecture, **arch_paras, **kwargs)
         self.architecture.compile()
 
-    def train(self, training_generator, epochs=20):
-        history = self.architecture.fit(training_generator, epochs=epochs, verbose=1)
+    def train(self, training_generator, epochs=20, callbacks=[], verbose=1, workers=1, use_multiprocessing=False, max_queue_size=10, **kwargs):
+        history = self.architecture.fit(training_generator, epochs=epochs, verbose=verbose, callbacks=callbacks, workers=workers, use_multiprocessing=use_multiprocessing, max_queue_size=max_queue_size, **kwargs)
         return history.history        
 
     def generate_images(self, num_images, image_class, save_path, image_format="jpg"):
