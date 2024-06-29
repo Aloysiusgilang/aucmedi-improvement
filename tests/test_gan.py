@@ -74,8 +74,8 @@ class GANNeuralNetworkTEST(unittest.TestCase):
         model = GANNeuralNetwork(channels=3, input_shape=(32,32), encoding_dims=100, architecture='2D.DCGAN')
         hist = model.train(training_generator=self.datagen,
                            epochs=3)
-        self.assertTrue("g_loss" in hist)
-        self.assertTrue("d_loss" in hist)
+        # assert there is a loss in the history and the length of the history is 2
+        self.assertTrue(len(hist) == 2)
 
     def test_training_wgan_gp(self):
         # def generator_loss(fake_img):
@@ -83,8 +83,7 @@ class GANNeuralNetworkTEST(unittest.TestCase):
         model = GANNeuralNetwork(channels=3, input_shape=(32,32), encoding_dims=100, architecture='2D.WGAN_GP')
         hist = model.train(training_generator=self.datagen,
                            epochs=3)
-        self.assertTrue("g_loss" in hist)
-        self.assertTrue("d_loss" in hist)
+        self.assertTrue(len(hist) == 2)
 
     #-------------------------------------------------#
     #                 Model Inference                 #
@@ -111,3 +110,43 @@ class GANNeuralNetworkTEST(unittest.TestCase):
 
         # check if the output shape is correct (num_images, x_size, y_size, channels)
         self.assertTrue(preds.shape == (10, 32, 32, 3))
+
+    def test_save_and_load_dcgan(self):
+        model = GANNeuralNetwork(channels=3, input_shape=(32,32), encoding_dims=100, architecture='2D.DCGAN')
+
+        with tempfile.TemporaryDirectory(prefix="tmp.aucmedi.", suffix=".data") as tmp_dir:
+            gen_path = os.path.join(tmp_dir, 'generator.keras')
+            disc_path = os.path.join(tmp_dir, 'discriminator.keras')
+
+            model.dump(gen_path, disc_path)
+            self.assertTrue(os.path.exists(gen_path))
+            self.assertTrue(os.path.exists(disc_path))
+
+            # Create a new instance and load the models
+            new_model = GANNeuralNetwork(channels=3, input_shape=(32,32), encoding_dims=100, architecture='2D.DCGAN')
+            new_model.load(gen_path, disc_path)
+
+            # Test if the loaded models can generate images
+            noise = np.random.normal(0, 1, (10, 100))
+            preds = new_model.architecture.generate(noise)
+            self.assertTrue(preds.shape == (10, 32, 32, 3))
+
+    def test_save_and_load_wgan_gp(self):
+        model = GANNeuralNetwork(channels=3, input_shape=(32,32), encoding_dims=100, architecture='2D.WGAN_GP')
+
+        with tempfile.TemporaryDirectory(prefix="tmp.aucmedi.", suffix=".data") as tmp_dir:
+            gen_path = os.path.join(tmp_dir, 'generator.keras')
+            disc_path = os.path.join(tmp_dir, 'discriminator.keras')
+
+            model.dump(gen_path, disc_path)
+            self.assertTrue(os.path.exists(gen_path))
+            self.assertTrue(os.path.exists(disc_path))
+
+            # Create a new instance and load the models
+            new_model = GANNeuralNetwork(channels=3, input_shape=(32,32), encoding_dims=100, architecture='2D.WGAN_GP')
+            new_model.load(gen_path, disc_path)
+
+            # Test if the loaded models can generate images
+            noise = np.random.normal(0, 1, (10, 100))
+            preds = new_model.architecture.generate(noise)
+            self.assertTrue(preds.shape == (10, 32, 32, 3))

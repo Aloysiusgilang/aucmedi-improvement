@@ -35,6 +35,9 @@ class GANNeuralNetwork:
         self.architecture = self.gan_factory.create_model(architecture, **arch_paras, **kwargs)
         self.architecture.compile()
 
+    def compile(self, d_loss_fn, g_loss_fn, d_optimizer, g_optimizer, d_loss_metric, g_loss_metric):
+        self.architecture.compile(d_loss_fn, g_loss_fn, d_optimizer, g_optimizer, d_loss_metric, g_loss_metric)
+
     def train(self, training_generator, epochs=20, callbacks=[], verbose=1, workers=1, use_multiprocessing=False, max_queue_size=10, **kwargs):
         history = self.architecture.fit(training_generator, epochs=epochs, verbose=verbose, callbacks=callbacks, workers=workers, use_multiprocessing=use_multiprocessing, max_queue_size=max_queue_size, **kwargs)
         return history.history        
@@ -97,11 +100,11 @@ class GANNeuralNetwork:
         with open(annotation_path, 'w') as file:
             json.dump(annotations, file, indent=4)
 
-    def save_model(self, model_path):
-        self.architecture.generator.save(model_path)
-        self.architecture.disciminator.save(model_path)
+    def dump(self, generator_path, discriminator_path):
+        self.architecture.generator.save(generator_path)
+        self.architecture.discriminator.save(discriminator_path)
 
-    def load_model(self, model_path="output/model.keras"):
-        self.architecture.generator = load_model(model_path)
-        self.architecture.disciminator = load_model(model_path)
+    def load(self, generator_path, discriminator_path):
+        self.architecture.generator = load_model(generator_path)
+        self.architecture.discriminator = load_model(discriminator_path)
     
