@@ -38,7 +38,8 @@ def evaluate_comparison(pred_list,
                         multi_label=False,
                         metrics_threshold=0.5,
                         macro_average_classes=False,
-                        suffix=None):
+                        suffix=None,
+                        metric_list=None):
     """ Function for performance comparison evaluation based on predictions from multiple models.
 
     ???+ example
@@ -130,9 +131,7 @@ def evaluate_comparison(pred_list,
     # Compute metric dataframe for each mode
     df_list = []
     for m in range(0, len(pred_list)):
-        metrics = compute_metrics(pred_list[m], labels, n_labels, threshold)
-        # remove class All from dataframe
-        metrics = metrics[~metrics["class"].isin(["All"])]
+        metrics = compute_metrics(pred_list[m], labels, n_labels, threshold, metric_list)
 
         # Rename class association in metrics dataframe
         class_mapping = {}

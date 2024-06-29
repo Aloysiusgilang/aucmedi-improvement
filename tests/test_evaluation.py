@@ -58,7 +58,8 @@ class EvaluationTEST(unittest.TestCase):
             self.sample_list.append(index)
 
         # List all available metrics
-        self.available_metrics = ["TP", "TN", "FP", "FN", "FPR", "FNR", "FDR", "Accuracy", "Sensitivity", "Specificity", "Precision", "F1", "LR+", "AUC", "Balanced Accuracy"]
+        self.available_metrics = ["TP", "TN", "FP", "FN", "Sensitivity", "Specificity", 
+                       "Precision", "FPR", "FNR", "FDR", "Accuracy", "F1", "AUC", "LR+", "Brier Score"]
 
     #-------------------------------------------------#
     #            Evaluation - Plot Fitting            #
@@ -249,7 +250,7 @@ class EvaluationTEST(unittest.TestCase):
         #assert all available metrics are present
         self.assertTrue(all([m in metrics["metric"].to_list() for m in self.available_metrics]))
 
-        self.assertTrue(np.array_equal(metrics.shape, (57, 3)))
+        self.assertTrue(np.array_equal(metrics.shape, (60, 3)))
         self.assertTrue(np.array_equal(metrics.columns.values,
                                       ["metric", "score", "class"]))
 
@@ -268,7 +269,7 @@ class EvaluationTEST(unittest.TestCase):
 
         classes_unique = np.unique(metrics["class"].to_numpy())
         print("classes_unique", classes_unique)
-        self.assertTrue(np.array_equiv(classes_unique, ["A", "All", "B", "C", "D"]))
+        self.assertTrue(np.array_equiv(classes_unique, ["A", "B", "C", "D"]))
 
     def test_evaluate_performance_barplot(self):
         evaluate_performance(self.preds, self.labels_ohe,
@@ -279,10 +280,7 @@ class EvaluationTEST(unittest.TestCase):
                              plot_confusion_matrix=False,
                              plot_roc_curve=False)
         path_plot = os.path.join(self.tmp_plot.name,
-                                 "plot.performance.per_class.barplot.png")
-        self.assertTrue(os.path.exists(path_plot))
-        path_plot = os.path.join(self.tmp_plot.name,
-                                    "plot.performance.multi_class.barplot.png")
+                                 "plot.performance.barplot.png")
         self.assertTrue(os.path.exists(path_plot))
         evaluate_performance(self.preds, self.labels_ohe,
                              out_path=self.tmp_plot.name,
@@ -293,10 +291,7 @@ class EvaluationTEST(unittest.TestCase):
                              plot_roc_curve=False,
                              suffix="test")
         path_plot = os.path.join(self.tmp_plot.name,
-                                 "plot.performance.per_class.barplot.test.png")
-        self.assertTrue(os.path.exists(path_plot))
-        path_plot = os.path.join(self.tmp_plot.name,
-                                    "plot.performance.multi_class.barplot.test.png")
+                                 "plot.performance.barplot.test.png")
         self.assertTrue(os.path.exists(path_plot))
 
     def test_evaluate_performance_confusionmatrix(self):
@@ -416,8 +411,8 @@ class EvaluationTEST(unittest.TestCase):
         print(df_merged.shape)
         print(df_gain.shape)
 
-        self.assertTrue(np.array_equal(df_merged.shape, (168, 4)))
-        self.assertTrue(np.array_equal(df_gain.shape, (120, 4)))
+        self.assertTrue(np.array_equal(df_merged.shape, (180, 4)))
+        self.assertTrue(np.array_equal(df_gain.shape, (132, 4)))
 
     def test_evaluate_comparison_naming(self):
         pred_list = [self.preds,
@@ -460,8 +455,8 @@ class EvaluationTEST(unittest.TestCase):
         print(df_merged.shape)
         print(df_gain.shape)
 
-        self.assertTrue(np.array_equal(df_merged.shape, (42, 3)))
-        self.assertTrue(np.array_equal(df_gain.shape, (30, 3)))
+        self.assertTrue(np.array_equal(df_merged.shape, (45, 3)))
+        self.assertTrue(np.array_equal(df_gain.shape, (33, 3)))
 
     #-------------------------------------------------#
     #          Evaluation - Dataset Analysis          #
