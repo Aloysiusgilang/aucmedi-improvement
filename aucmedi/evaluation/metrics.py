@@ -22,7 +22,7 @@
 # External Libraries
 import numpy as np
 import pandas as pd
-from sklearn.metrics import roc_curve, roc_auc_score, brier_score_loss, cohen_kappa_score, balanced_accuracy_score
+from sklearn.metrics import roc_curve, roc_auc_score
 
 #-----------------------------------------------------#
 #         Computation: Classification Metrics         #
@@ -32,81 +32,116 @@ def compute_metrics(preds, labels, n_labels, threshold=None):
 
     !!! info "Computed Metrics"
         F1, Accuracy, Sensitivity, Specificity, AUROC (AUC), Precision, FPR, FNR,
-        FDR, TruePositives, TrueNegatives, FalsePositives, FalseNegatives
+        FDR, TruePositives, TrueNegatives, FalsePositives, FalseNegatives, Balanced Accuracy
 
     Args:
-        preds (numpy.ndarray):          A NumPy array of predictions formatted with shape (n_samples, n_labels). Provided by
-                                        [NeuralNetwork][aucmedi.neural_network.model].
-        labels (numpy.ndarray):         Classification list with One-Hot Encoding. Provided by
-                                        [input_interface][aucmedi.data_processing.io_data.input_interface].
-        n_labels (int):                 Number of classes. Provided by [input_interface][aucmedi.data_processing.io_data.input_interface].
+        preds (numpy.ndarray):          A NumPy array of predictions formatted with shape (n_samples, n_labels).
+        labels (numpy.ndarray):         Classification list with One-Hot Encoding.
+        n_labels (int):                 Number of classes.
         threshold (float):              Only required for multi_label data. Threshold value if prediction is positive.
 
     Returns:
         metrics (pandas.DataFrame):     Dataframe containing all computed metrics (except ROC).
     """
-    df_list = []
-    for c in range(0, n_labels):
-        # Initialize variables
-        data_dict = {}
-
-        # Identify truth and prediction for class c
-        truth = labels[:, c]
-        if threshold is None:
-            pred_argmax = np.argmax(preds, axis=-1)
-            pred = (pred_argmax == c).astype(np.int8)
-        else:
-            pred = np.where(preds[:, c] >= threshold, 1, 0)
-        # Obtain prediction confidence (probability)
-        pred_prob = preds[:, c]
-
-        # Compute the confusion matrix
-        tp, tn, fp, fn = compute_CM(truth, pred)
-        data_dict["TP"] = tp
-        data_dict["TN"] = tn
-        data_dict["FP"] = fp
-        data_dict["FN"] = fn
-
-        # Compute several metrics based on confusion matrix
-        data_dict["Sensitivity"] = np.divide(tp, tp+fn)
-        data_dict["Specificity"] = np.divide(tn, tn+fp)
-        data_dict["Precision"] = np.divide(tp, tp+fp)
-        data_dict["FPR"] = np.divide(fp, fp+tn)
-        data_dict["FNR"] = np.divide(fn, fn+tp)
-        data_dict["FDR"] = np.divide(fp, fp+tp)
-        data_dict["Accuracy"] = np.divide(tp+tn, tp+tn+fp+fn)
-        data_dict["F1"] = np.divide(2*tp, 2*tp+fp+fn)
-        data_dict["F1"] = np.divide(2*tp, 2*tp+fp+fn)
-        
-
-        # Compute area under the ROC curve
-        try:
-            data_dict["AUC"] = roc_auc_score(truth, pred_prob)
-            print("AUC: ", data_dict["AUC"])
-            data_dict["brier_score"] = brier_score_loss(truth, pred_prob)
-            print("Brier Score: ", data_dict["brier_score"])
-            data_dict["kappa"] = cohen_kappa_score(truth, pred_prob)
-            print("Kappa: ", data_dict["kappa"])
-            data_dict["balanced_acc"] = balanced_accuracy_score(truth, pred_prob)
-            print("Balanced Accuracy: ", data_dict["balanced_acc"])
-            
-        except:
-            print("sklearn.metrics score is not defined.")
-            
-        # Parse metrics to dataframe
-        df = pd.DataFrame.from_dict(data_dict, orient="index",
-                                    columns=["score"])
-        df = df.reset_index()
-        df.rename(columns={"index": "metric"}, inplace=True)
-        df["class"] = c
-
-        # Append dataframe to list
-        df_list.append(df)
-
-    # Combine dataframes
-    df_final = pd.concat(df_list, axis=0, ignore_index=True)
-    # Return final dataframe
+    # Perclass metrics
+    per_class_metrics = [compute_class_metrics(preds, labels, c, threshold) for c in range(n_labels)]
+    df_per_class = pd.concat(per_class_metrics, axis=0, ignore_index=True) 
+    
+    # Balanced Accuracy
+    balanced_accuracy = compute_balanced_accuracy(per_class_metrics)
+    df_balanced_accuracy = pd.DataFrame({
+        "metric": ["Balanced Accuracy"],
+        "score": [balanced_accuracy],
+        "class": ["All"]
+    })
+    
+    df_final = pd.concat([df_per_class, df_balanced_accuracy], axis=0, ignore_index=True)
     return df_final
+
+def compute_class_metrics(preds, labels, class_index, threshold=None):
+    """ Function for computing metrics for a specific class.
+    
+    Args:
+        preds (numpy.ndarray):          A NumPy array of predictions.
+        labels (numpy.ndarray):         Classification list with One-Hot Encoding.
+        class_index (int):              Index of the class to compute metrics for.
+        threshold (float):              Threshold value if prediction is positive.
+        
+    Returns:
+        metrics (pandas.DataFrame):     Dataframe containing metrics for the specified class.
+    """
+    data_dict = {}
+    
+    truth, pred, pred_prob = get_class_predictions(preds, labels, class_index, threshold)
+    
+    # Compute confusion matrix
+    tp, tn, fp, fn = compute_CM(truth, pred)
+    data_dict["TP"] = tp
+    data_dict["TN"] = tn
+    data_dict["FP"] = fp
+    data_dict["FN"] = fn
+
+    # Compute metrics based on confusion matrix
+    data_dict.update(compute_confusion_metrics(tp, tn, fp, fn))
+    
+    # Compute AUROC
+    data_dict["AUC"] = compute_auc(truth, pred_prob)
+    
+    # Parse metrics to dataframe
+    df = pd.DataFrame.from_dict(data_dict, orient="index", columns=["score"]).reset_index()
+    df.rename(columns={"index": "metric"}, inplace=True)
+    df["class"] = class_index
+    
+    return df
+
+def get_class_predictions(preds, labels, class_index, threshold=None):
+    """ Helper function to get truth labels, predictions and probabilities for a specific class.
+    
+    Args:
+        preds (numpy.ndarray):          A NumPy array of predictions.
+        labels (numpy.ndarray):         Classification list with One-Hot Encoding.
+        class_index (int):              Index of the class.
+        threshold (float):              Threshold value if prediction is positive.
+        
+    Returns:
+        truth (numpy.ndarray):          Truth labels for the class.
+        pred (numpy.ndarray):           Predictions for the class.
+        pred_prob (numpy.ndarray):      Prediction probabilities for the class.
+    """
+    truth = labels[:, class_index]
+    if threshold is None:
+        pred_argmax = np.argmax(preds, axis=-1)
+        pred = (pred_argmax == class_index).astype(np.int8)
+    else:
+        pred = np.where(preds[:, class_index] >= threshold, 1, 0)
+    pred_prob = preds[:, class_index]
+    
+    return truth, pred, pred_prob
+
+def compute_confusion_metrics(tp, tn, fp, fn):
+    """ Helper function to compute metrics based on confusion matrix.
+    
+    Args:
+        tp (int):                       True Positives.
+        tn (int):                       True Negatives.
+        fp (int):                       False Positives.
+        fn (int):                       False Negatives.
+        
+    Returns:
+        metrics (dict):                 Dictionary containing computed metrics.
+    """
+    metrics = {
+        "Sensitivity": np.divide(tp, tp + fn),
+        "Specificity": np.divide(tn, tn + fp),
+        "Precision": np.divide(tp, tp + fp),
+        "FPR": np.divide(fp, fp + tn),
+        "FNR": np.divide(fn, fn + tp),
+        "FDR": np.divide(fp, fp + tp),
+        "Accuracy": np.divide(tp + tn, tp + tn + fp + fn),
+        "F1": np.divide(2 * tp, 2 * tp + fp + fn),
+        "LR+": np.divide(np.divide(tp, tp + fn), np.divide(fp, fp + tn)),
+    }
+    return metrics
 
 #-----------------------------------------------------#
 #            Computation: Confusion Matrix            #
@@ -173,3 +208,37 @@ def compute_CM(gt, pd):
         elif gt[i] == 0 and pd[i] == 1 : fp += 1
         else : print("ERROR at confusion matrix", i)
     return tp, tn, fp, fn
+
+#-----------------------------------------------------#
+#                     Additional Metrics              #
+#-----------------------------------------------------#
+
+def compute_auc(truth, pred_prob):
+    """ Helper function to compute AUROC.
+    
+    Args:
+        truth (numpy.ndarray):          Truth labels.
+        pred_prob (numpy.ndarray):      Prediction probabilities.
+        
+    Returns:
+        auc (float):                    Computed AUROC value.
+    """
+    try:
+        auc = roc_auc_score(truth, pred_prob)
+    except ValueError:
+        auc = None
+        print("ROC AUC score is not defined.")
+    return auc
+
+def compute_balanced_accuracy(metrics_per_class):
+    """ Function to compute balanced accuracy.
+    
+    Args:
+        metrics_per_class (list):       List of dataframes containing metrics for each class.
+        
+    Returns:
+        balanced_accuracy (float):      Computed balanced accuracy.
+    """
+    sensitivities = [df[df['metric'] == 'Sensitivity']['score'].values[0] for df in metrics_per_class]
+    balanced_accuracy = np.mean(sensitivities)
+    return balanced_accuracy

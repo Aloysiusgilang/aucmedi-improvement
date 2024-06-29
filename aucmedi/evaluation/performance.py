@@ -205,31 +205,54 @@ def evalby_confusion_matrix(confusion_matrix, out_path, class_names,
 #          Evaluation Performance - Barplots          #
 #-----------------------------------------------------#
 def evalby_barplot(metrics, out_path, class_names, show=False, suffix=None):
+    df_metrics_per_class = metrics[metrics["class"] != "All"]
+    df_metrics_multi_class = metrics[metrics["class"] == "All"]
+    
     # Remove confusion matrix from metric dataframe
-    df_metrics = metrics[~metrics["metric"].isin(["TN", "FN", "FP", "TP"])]
-    df_metrics["class"] = pd.Categorical(df_metrics["class"])
-
-    # Generate metric results
-    fig = (ggplot(df_metrics, aes("class", "score", fill="class"))
-              + geom_col(stat='identity', width=0.6, color="black",
-                         position = position_dodge(width=0.6))
-              + ggtitle("Performance Evaluation: Metric Overview")
-              + facet_wrap("metric")
-              + coord_flip()
-              + xlab("")
-              + ylab("Score")
-              + scale_y_continuous(limits=[0, 1], breaks=np.arange(0, 1.1, 0.1))
-              + scale_fill_discrete(name="Classes")
-              + theme_bw())
-
-    # Store figure to disk
-    filename = "plot.performance.barplot"
-    if suffix is not None : filename += "." + str(suffix)
-    filename += ".png"
-    fig.save(filename=filename, path=out_path, width=12, height=9, dpi=200)
-
-    # Plot figure
-    if show : print(fig)
+    df_metrics_per_class = df_metrics_per_class[~df_metrics_per_class["metric"].isin(["TN", "FN", "FP", "TP"])]
+    
+    # Ensure 'class' is treated as categorical data
+    df_metrics_per_class["class"] = pd.Categorical(df_metrics_per_class["class"], categories=class_names)
+    
+    # Plot per-class metrics
+    fig_per_class = (ggplot(df_metrics_per_class, aes("class", "score", fill="class"))
+                     + geom_col(stat='identity', width=0.6, color="black", position=position_dodge(width=0.6))
+                     + ggtitle("Performance Evaluation: Per-Class Metric Overview")
+                     + facet_wrap("metric")
+                     + coord_flip()
+                     + xlab("")
+                     + ylab("Score")
+                     + scale_y_continuous(limits=[0, 1], breaks=np.arange(0, 1.1, 0.1))
+                     + scale_fill_discrete(name="Classes")
+                     + theme_bw())
+    
+    # Plot multi-class metrics
+    fig_multi_class = (ggplot(df_metrics_multi_class, aes("metric", "score", fill="metric"))
+                       + geom_col(stat='identity', width=0.6, color="black", position=position_dodge(width=0.6))
+                       + ggtitle("Performance Evaluation: Multi-Class Metric Overview")
+                       + coord_flip()
+                       + xlab("")
+                       + ylab("Score")
+                       + scale_y_continuous(limits=[0, 1], breaks=np.arange(0, 1.1, 0.1))
+                       + scale_fill_discrete(name="Metrics")
+                       + theme_bw())
+    
+    # Store figures to disk
+    filename_per_class = "plot.performance.per_class.barplot"
+    filename_multi_class = "plot.performance.multi_class.barplot"
+    if suffix is not None:
+        filename_per_class += "." + str(suffix)
+        filename_multi_class += "." + str(suffix)
+    filename_per_class += ".png"
+    filename_multi_class += ".png"
+    
+    fig_per_class.save(filename=filename_per_class, path=out_path, width=12, height=9, dpi=200)
+    fig_multi_class.save(filename=filename_multi_class, path=out_path, width=12, height=9, dpi=200)
+    
+    # Plot figures
+    if show:
+        print(fig_per_class)
+        print(fig_multi_class)
 
 #-----------------------------------------------------#
 #          Evaluation Performance - ROC plot          #

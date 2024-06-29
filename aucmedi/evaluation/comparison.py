@@ -131,6 +131,8 @@ def evaluate_comparison(pred_list,
     df_list = []
     for m in range(0, len(pred_list)):
         metrics = compute_metrics(pred_list[m], labels, n_labels, threshold)
+        # remove class All from dataframe
+        metrics = metrics[~metrics["class"].isin(["All"])]
 
         # Rename class association in metrics dataframe
         class_mapping = {}
