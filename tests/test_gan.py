@@ -67,9 +67,46 @@ class GANNeuralNetworkTEST(unittest.TestCase):
                                      shuffle=True,
                                      grayscale=False, batch_size=3)
 
-    # #-------------------------------------------------#
-    # #                  Model Training                 #
-    # #-------------------------------------------------#
+    #-------------------------------------------------#
+    #                  Model Creation                 #
+    #-------------------------------------------------#
+    def test_create_dcgan(self):
+        model = GANNeuralNetwork(channels=3, input_shape=(32,32), encoding_dims=100, architecture='2D.DCGAN')
+        self.assertTrue(model.architecture is not None)
+        
+        try : model.architecture.generator.summary()
+        except : raise Exception()
+        self.assertTrue(model.architecture.generator.input_shape == (None, 100))
+        self.assertTrue(model.architecture.generator.output_shape == (None, 32, 32, 3))
+
+        try : model.architecture.discriminator.summary()
+        except : raise Exception()
+        self.assertTrue(model.architecture.discriminator.input_shape == (None, 32, 32, 3))
+        self.assertTrue(model.architecture.discriminator.output_shape == (None, 1))
+
+
+    def test_create_wgan_gp(self):
+        model = GANNeuralNetwork(channels=3, input_shape=(32,32), encoding_dims=100, architecture='2D.WGAN_GP')
+        self.assertTrue(model.architecture is not None)
+
+        try : model.architecture.generator.summary()
+        except : raise Exception()
+        self.assertTrue(model.architecture.generator.input_shape == (None, 100))
+        self.assertTrue(model.architecture.generator.output_shape == (None, 32, 32, 3))
+
+        try : model.architecture.discriminator.summary()
+        except : raise Exception()
+        self.assertTrue(model.architecture.discriminator.input_shape == (None, 32, 32, 3))
+        self.assertTrue(model.architecture.discriminator.output_shape == (None, 1))
+
+    
+    def test_create_wgan_gp(self):
+        model = GANNeuralNetwork(channels=3, input_shape=(32,32), encoding_dims=100, architecture='2D.WGAN_GP')
+        self.assertTrue(model.architecture is not None)
+
+    #-------------------------------------------------#
+    #                  Model Training                 #
+    #-------------------------------------------------#
     def test_training_dcgan(self):
         model = GANNeuralNetwork(channels=3, input_shape=(32,32), encoding_dims=100, architecture='2D.DCGAN')
         hist = model.train(training_generator=self.datagen,

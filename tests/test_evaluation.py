@@ -268,8 +268,26 @@ class EvaluationTEST(unittest.TestCase):
         self.assertTrue(all([m in metrics["metric"].to_list() for m in self.available_metrics]))
 
         classes_unique = np.unique(metrics["class"].to_numpy())
-        print("classes_unique", classes_unique)
         self.assertTrue(np.array_equiv(classes_unique, ["A", "B", "C", "D"]))
+
+    def test_evaluate_performance_metric_selection(self):
+        metric_selection = ["AUC", "LR+", "Brier Score"]
+        metrics = evaluate_performance(self.preds, self.labels_ohe,
+                                       out_path=self.tmp_plot.name,
+                                       multi_label=False,
+                                       class_names=None,
+                                       store_csv=False,
+                                       plot_barplot=False,
+                                       plot_confusion_matrix=False,
+                                       plot_roc_curve=False,
+                                       metric_list=metric_selection)
+
+        #assert all available metrics are present
+        self.assertTrue(all([m in metrics["metric"].to_list() for m in metric_selection]))
+        self.assertTrue(np.array_equal(metrics.shape, (12, 3)))
+        self.assertTrue(np.array_equal(metrics.columns.values,
+                                      ["metric", "score", "class"]))
+
 
     def test_evaluate_performance_barplot(self):
         evaluate_performance(self.preds, self.labels_ohe,
