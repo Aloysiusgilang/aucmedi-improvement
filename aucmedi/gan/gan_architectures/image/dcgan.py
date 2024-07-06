@@ -60,7 +60,7 @@ class DCGAN(GAN_Architecture_Base):
         return Model(inputs=model_input, outputs=x)
 
     def train_step(self, data):
-        real_images, _ = data
+        real_images = data
         batch_size = tf.shape(real_images)[0]
 
         random_latent_vectors = tf.random.normal(shape=(batch_size, self.encoding_dims))

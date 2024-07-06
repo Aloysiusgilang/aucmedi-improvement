@@ -95,8 +95,10 @@ class WGAN_GP(GAN_Architecture_Base):
         gp = tf.reduce_mean((norm - 1.0) ** 2)
         return gp
 
+    @tf.function
     def train_step(self, data):
-        real_images, _ = data
+        
+        real_images= data
         batch_size = tf.shape(real_images)[0]
 
         for i in range(self.d_steps):

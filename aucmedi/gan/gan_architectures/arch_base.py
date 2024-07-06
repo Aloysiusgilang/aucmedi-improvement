@@ -30,6 +30,7 @@ class GAN_Architecture_Base(tf.keras.Model):
     def build_discriminator(self):
         raise NotImplementedError("Subclasses should implement this method")
     
+    @tf.function
     def train_step(self, data):
         raise NotImplementedError("Subclasses should implement this method")
     
