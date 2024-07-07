@@ -75,10 +75,10 @@ from aucmedi.neural_network.architectures.image import architecture_dict as arch
 for arch in arch_image:
     architecture_dict["2D." + arch] = arch_image[arch]
 
-# Add volume architectures to architecture_dict
-from aucmedi.neural_network.architectures.volume import architecture_dict as arch_volume
-for arch in arch_volume:
-    architecture_dict["3D." + arch] = arch_volume[arch]
+# # Add volume architectures to architecture_dict
+# from aucmedi.neural_network.architectures.volume import architecture_dict as arch_volume
+# for arch in arch_volume:
+#     architecture_dict["3D." + arch] = arch_volume[arch]
 
 #-----------------------------------------------------#
 #       Meta Information of Architecture Classes      #
@@ -91,7 +91,7 @@ from aucmedi.neural_network.architectures.image import supported_standardize_mod
 for m in modes_image:
     supported_standardize_mode["2D." + m] = modes_image[m]
 
-# Add volume architectures to supported_standardize_mode
-from aucmedi.neural_network.architectures.volume import supported_standardize_mode as modes_volume
-for m in modes_volume:
-    supported_standardize_mode["3D." + m] = modes_volume[m]
+# # Add volume architectures to supported_standardize_mode
+# from aucmedi.neural_network.architectures.volume import supported_standardize_mode as modes_volume
+# for m in modes_volume:
+#     supported_standardize_mode["3D." + m] = modes_volume[m]
