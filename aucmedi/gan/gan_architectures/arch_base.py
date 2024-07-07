@@ -1,5 +1,6 @@
 import tensorflow as tf
 from tensorflow.keras.optimizers import Adam
+from aucmedi.gan.gan_architectures.metric.kid import KID
 
 class GAN_Architecture_Base(tf.keras.Model):
     
@@ -19,10 +20,11 @@ class GAN_Architecture_Base(tf.keras.Model):
         self.g_loss_fn = g_loss_fn
         self.d_loss_metric = d_loss_metric   
         self.g_loss_metric = g_loss_metric
+        self.kid = KID(self.image_shape[0])
 
     @property
     def metrics(self):
-        return [self.d_loss_metric, self.g_loss_metric]
+        return [self.d_loss_metric, self.g_loss_metric, self.kid]
     
     def build_generator(self):
         raise NotImplementedError("Subclasses should implement this method")
@@ -34,6 +36,14 @@ class GAN_Architecture_Base(tf.keras.Model):
     def train_step(self, data):
         raise NotImplementedError("Subclasses should implement this method")
     
+    def test_step(self, real_images):
+        generated_images = self.generate(32, training=False)
+
+        self.kid.update_state(real_images, generated_images)
+
+        # only KID is measured during the evaluation phase for computational efficiency
+        return {self.kid.name: self.kid.result()}
+    
     def generate(self, noise):
-        return self.generator.predict(noise)
+        return self.generator(noise)
 

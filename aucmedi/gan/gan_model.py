@@ -38,8 +38,16 @@ class GANNeuralNetwork:
     def compile(self, d_loss_fn, g_loss_fn, d_optimizer, g_optimizer, d_loss_metric, g_loss_metric):
         self.architecture.compile(d_loss_fn, g_loss_fn, d_optimizer, g_optimizer, d_loss_metric, g_loss_metric)
 
-    def train(self, training_generator, epochs=20, callbacks=[], verbose=1, workers=1, use_multiprocessing=False, max_queue_size=10, **kwargs):
-        history = self.architecture.fit(training_generator, epochs=epochs, verbose=verbose, callbacks=callbacks, workers=workers, use_multiprocessing=use_multiprocessing, max_queue_size=max_queue_size, **kwargs)
+    def train(self, 
+              training_generator, 
+              epochs=20, 
+              callbacks=[],
+              verbose=1, 
+              workers=1, 
+              use_multiprocessing=False, 
+              max_queue_size=10, 
+              validation_data=None):
+        history = self.architecture.fit(training_generator, epochs=epochs, verbose=verbose, callbacks=callbacks, workers=workers, use_multiprocessing=use_multiprocessing, max_queue_size=max_queue_size, validation_data=validation_data)
         return history.history        
 
     def generate_images(self, num_images, image_class, save_path, image_format="jpg"):
