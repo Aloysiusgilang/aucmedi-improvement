@@ -4,11 +4,12 @@ from aucmedi.gan.gan_architectures.metric.kid import KID
 
 class GAN_Architecture_Base(tf.keras.Model):
     
-    def __init__(self, encoding_dims, channels, input_shape, step_channels):
+    def __init__(self, encoding_dims, channels, input_shape, step_channels, batch_size=32):
         super(GAN_Architecture_Base, self).__init__()
         self.encoding_dims = encoding_dims
         self.image_shape = input_shape + (channels,)
         self.step_channels = step_channels
+        self.batch_size = batch_size
         self.discriminator = self.build_discriminator()
         self.generator = self.build_generator()
 
@@ -32,12 +33,19 @@ class GAN_Architecture_Base(tf.keras.Model):
     def build_discriminator(self):
         raise NotImplementedError("Subclasses should implement this method")
     
+    def set_generator(self, generator):
+        self.generator = generator
+    
+    def set_discriminator(self, discriminator):
+        self.discriminator = discriminator
+    
     @tf.function
     def train_step(self, data):
         raise NotImplementedError("Subclasses should implement this method")
     
     def test_step(self, real_images):
-        generated_images = self.generate(32, training=False)
+        latent_samples = tf.random.normal(shape=(self.batch_size, self.encoding_dims))
+        generated_images = self.generator(latent_samples, training=False)
 
         self.kid.update_state(real_images, generated_images)
 
