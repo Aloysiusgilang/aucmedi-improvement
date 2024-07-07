@@ -1,6 +1,6 @@
 import tensorflow as tf
+from tensorflow.keras.optimizers.legacy import Adam
 from tensorflow.keras import layers, Model
-from tensorflow.keras.optimizers import Adam
 from tensorflow import keras
 from aucmedi.gan.gan_architectures.arch_base import GAN_Architecture_Base
 
