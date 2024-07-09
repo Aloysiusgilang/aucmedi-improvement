@@ -1,5 +1,6 @@
 # External libraries
 import tensorflow as tf
+from tensorflow import keras
 from tensorflow.keras.models import load_model
 from tensorflow.keras.models import Model
 from tensorflow.keras.optimizers.legacy import Adam
@@ -57,7 +58,9 @@ class GANNeuralNetwork:
         augmented_images = []
         for i in range(num_images):
             filename = f"{image_class}_{i}.{image_format}"
-            cv2.imwrite(os.path.join(save_path, filename), generated[i] * 255)
+            generated_images = generated[i].numpy()
+            generated_images = keras.utils.array_to_img(generated_images)
+            generated_images.save(os.path.join(save_path, filename))
             augmented_images.append(filename)
 
         return augmented_images
