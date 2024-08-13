@@ -60,11 +60,11 @@ from aucmedi.neural_network.architectures.image.vgg16 import VGG16
 from aucmedi.neural_network.architectures.image.vgg19 import VGG19
 # Xception
 from aucmedi.neural_network.architectures.image.xception import Xception
-# Vision Transformer (ViT)
-from aucmedi.neural_network.architectures.image.vit_b16 import ViT_B16
-from aucmedi.neural_network.architectures.image.vit_b32 import ViT_B32
-from aucmedi.neural_network.architectures.image.vit_l16 import ViT_L16
-from aucmedi.neural_network.architectures.image.vit_l32 import ViT_L32
+# # Vision Transformer (ViT)
+# from aucmedi.neural_network.architectures.image.vit_b16 import ViT_B16
+# from aucmedi.neural_network.architectures.image.vit_b32 import ViT_B32
+# from aucmedi.neural_network.architectures.image.vit_l16 import ViT_L16
+# from aucmedi.neural_network.architectures.image.vit_l32 import ViT_L32
 # ConvNeXt
 from aucmedi.neural_network.architectures.image.convnext_base import ConvNeXtBase
 from aucmedi.neural_network.architectures.image.convnext_tiny import ConvNeXtTiny
