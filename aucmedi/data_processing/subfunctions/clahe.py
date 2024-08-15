@@ -63,28 +63,14 @@ class Clahe(Subfunction_Base):
     #---------------------------------------------#
     def transform(self, image):
         # Determine the dimensions of the image
-        if image.ndim == 3 and image.shape[-1] == 1:
-            # 2D grayscale image
-            image_uint8 = (image).astype(np.uint8)
-            augmented = self.aug_transform.apply(img=image_uint8)
-            transformed_image = augmented.astype(np.float64)
-        
-        elif image.ndim == 3 and image.shape[-1] == 3:
-            # 2D RGB image
+        if image.ndim == 3:
+            # 2D image
             image_uint8 = (image).astype(np.uint8)
             augmented = self.aug_transform.apply(img=image_uint8)
             transformed_image = augmented.astype(np.float64)
 
-        elif image.ndim == 4 and image.shape[-1] == 3:
-            # 3D RGB image (batch of 2D RGB images)
-            image_uint8 = (image).astype(np.uint8)
-            transformed_image = np.zeros_like(image, dtype=np.float64)
-            for i in range(image.shape[0]):
-                augmented = self.aug_transform.apply(img=image_uint8[i])
-                transformed_image[i] = augmented.astype(np.float64)
-
-        elif image.ndim == 4 and image.shape[-1] == 1:
-            # 3D grayscale image (batch of 2D grayscale images)
+        elif image.ndim == 4:
+            # 3D image
             image_uint8 = (image).astype(np.uint8)
             transformed_image = np.zeros_like(image, dtype=np.float64)
             for i in range(image.shape[0]):
